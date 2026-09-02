@@ -7,6 +7,7 @@ import nu.xom.Element;
 import nu.xom.Node;
 import nu.xom.Nodes;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -57,9 +58,7 @@ public class MeterSignatures extends HashMap<MeterSignature, Integer> {
 
             // no safety checks needed, as meico generated the data
             double date = Double.parseDouble(timeSignature.getAttributeValue("date"));              // get its date
-            double numerator = Double.parseDouble(timeSignature.getAttributeValue("numerator"));    // get numerator
-            int denominator = Integer.parseInt(timeSignature.getAttributeValue("denominator"));     // get denominator
-            MeterSignature meterSignature = new MeterSignature(numerator, denominator);
+            MeterSignature meterSignature = MeterSignature.fromMsm(timeSignature);
 
             // compute the number of measures that follow this time signature
             double duration;
@@ -71,7 +70,7 @@ public class MeterSignatures extends HashMap<MeterSignature, Integer> {
                 duration = msm.getEndDate() - date;     // compute duration from the end date
             }
 
-            double durationOfOneMeasure = (ppq * 4.0 * numerator) / denominator;
+            double durationOfOneMeasure = (ppq * 4.0 * meterSignature.numerator) / meterSignature.denominator;
             int numberOfMeasures = (int)(duration / durationOfOneMeasure);
 
             meterSignatures.merge(meterSignature, numberOfMeasures, Integer::sum);
@@ -84,15 +83,34 @@ public class MeterSignatures extends HashMap<MeterSignature, Integer> {
     /**
      * Perform an analysis of the given MSMs and cumulate the results. This method does not erase the previous results.
      * So, performing it iteratively on a series of MSMs will produce a cumulative result.
-     * @param msms
+     * @param msms the list of MSMs to analyze
      */
     public void analyze(List<Msm> msms) {
         for (Msm msm : msms) {
-            System.out.println("Processing " + msm.getFile().getName());
             MeterSignatures meterSignatures = this.analyze(msm);
             this.merge(meterSignatures);    // accumulate the results
-            System.out.println("    " + meterSignatures.toString());
         }
+    }
+
+    /**
+     * Check whether the given MEI has a meter signature in its scoreDef, i.e., it has a defined time signature.
+     * @param mei the MEI to check
+     * @return the first meter signature in the first mdiv's first scoreDef/staffDeff/layerDef or a 0/0 meter signature if there is none
+     */
+    public static MeterSignature hasMeterSignature(Mei mei) {
+        ArrayList<Element> mdivs = mei.getAllMdivs();
+        if (mdivs.isEmpty())
+            return null;
+
+        // TODO: die gesuchten Elemente dürfen nicht in einer <section> stehen
+        Nodes defs = mdivs.get(0).query("descendant::*[local-name()='scoreDef' or local-name()='staffDef' or local-name()='layerDef' or local-name()='meterSig']");    // we check only the first mdiv, others are only verses with variants
+        for (Node def : defs) {
+            MeterSignature meterSignature = MeterSignature.fromMei((Element) def);
+            if (meterSignature != null)
+                return meterSignature;
+        }
+
+        return null;
     }
 
     /**

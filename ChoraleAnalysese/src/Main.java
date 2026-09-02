@@ -2,6 +2,7 @@ import meico.Meico;
 import meico.mei.Mei;
 import meico.mpm.elements.maps.GenericMap;
 import meico.msm.Msm;
+import meterSignatures.MeterSignature;
 import meterSignatures.MeterSignatures;
 import nu.xom.*;
 import org.xml.sax.SAXException;
@@ -10,10 +11,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Main class and entry point for program execution.
- * TODO: add homophony/polyphony analysis, which voice plays which chord tone, number of tones in chords
+ * TODO: add homophony/polyphony analysis; which voice plays which chord tone; number of tones in chords
  * @author Axel Berndt
  */
 public class Main {
@@ -29,7 +32,7 @@ public class Main {
     private boolean chordSequences = false;                     // compute a Markov model of the chord sequences
     private boolean nonchordTones = false;                      // get a list and classification of the nonchord tones
 
-    private final ArrayList<Mei> meis = new ArrayList<>();      // the MEI files to be analyzed
+    private final HashMap<Mei, List<Msm>> meis2Msms = new HashMap<>(); // the MEI files to be analyzed
 
     public static void main(String[] args) {
         Main main = new Main();                                 // an instance of Main to hold the data to be analyzed, the tasks and the results
@@ -98,19 +101,26 @@ public class Main {
      */
     private void analyze(){
         // preprocessing
-        ArrayList<Msm> msms = new ArrayList<>();                                // some analyses are easier performed on the MSMs, so we create them subsequently
-        for (Mei mei : this.meis) {
-//            mei.resolveCopyofsAndSameas();                                      // this is done by MEI-to-MSM conversion automatically
+        for (Mei mei : this.meis2Msms.keySet()) {
             removeEndingsAndRepetitionmarks(mei);                               // the sequence of the chorale is encoded in <expan>; repetition marks and endings should not be present in the through-composed version, thus we remove them hereby
             addInvisMeterSigBeforeFirstMeasure(mei);
-//            mei.resolveExpansions();                                            // this is done by MEI-to-MSM conversion automatically
-            msms.addAll(mei.exportMsm());                                       // export to MSM
-            msms.forEach(msm -> this.uniteFragmentedTimeSignatures(msm));   // cleanup fragmented measures (e.g. at repetitions) by uniting them wherever they sum up to the time signature before that position
+            this.meis2Msms.get(mei).forEach(msm -> this.uniteFragmentedTimeSignatures(msm));   // cleanup fragmented measures (e.g., at repetitions) by uniting them wherever they sum up to the time signature before that position
         }
 
         // meter signatures analysis
         if (this.meterSignatures != null) {
-            this.meterSignatures.analyze(msms);
+            for (Mei mei : this.meis2Msms.keySet()) {
+                System.out.println("Processing " + mei.getFile().getName());
+                MeterSignature meterSignature = MeterSignatures.hasMeterSignature(mei);
+                MeterSignatures meterSignaturesOfThis = new MeterSignatures();
+                if (meterSignature == null) {                                       // the music has no defined meter signature, so we add a default one
+                    meterSignaturesOfThis.put(new MeterSignature(0.0, 0), 1);
+                } else {                                                            // otherwise we have to do some work, though, we check only the first mdiv/MSM, others are only verses with variants
+                    meterSignaturesOfThis = MeterSignatures.analyze(this.meis2Msms.get(mei).get(0));    // get the meter signatures in this music and for how many measures it plays
+                }
+                System.out.println("    " + meterSignaturesOfThis.toString());
+                this.meterSignatures.merge(meterSignaturesOfThis);
+            }
             System.out.println(this.meterSignatures.size() + " meter signatures found.\n    " + this.meterSignatures.toString());
         }
 
@@ -262,7 +272,9 @@ public class Main {
             return false;
         }
 
-        this.meis.add(mei);
+        mei.resolveCopyofsAndSameas();                                      // this is also done during MEI-to-MSM conversion, execute this line if the MEI data should be altered before further analyses
+//        mei.resolveExpansions();                                            // execute this line if the MEI data should be altered before further analyses
+        this.meis2Msms.put(mei, mei.exportMsm(720, true, true, true));   // we immediately also create the MSMs, as they are needed for the analyses
         return true;
     }
 
