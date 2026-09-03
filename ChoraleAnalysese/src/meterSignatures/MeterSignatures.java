@@ -11,7 +11,7 @@ import supplementary.Supplementary;
 import java.util.*;
 
 /**
- * This class analyzes a given MEI to find out which meter signatures are present and in how many measures.
+ * This class analyzes a given MEI/MSM to find out which meter signatures are present and in how many measures.
  * @author Axel Berndt
  */
 public class MeterSignatures extends HashMap<MeterSignature, Integer> {
@@ -26,7 +26,7 @@ public class MeterSignatures extends HashMap<MeterSignature, Integer> {
      * Perform an analysis of the given MSM.  This method does not work for polyphonic meter signatures, i.e., the
      * musical parts have individual meter signatures that differ from other parts!
      * @param msm
-     * @return a HashMap of the form <meter signature, number of measures>
+     * @return a HashMap of the form (meter signature, number of measures)
      */
     public static MeterSignatures analyze(Msm msm) {
         // safety checks

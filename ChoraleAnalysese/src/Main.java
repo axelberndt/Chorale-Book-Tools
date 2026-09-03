@@ -1,3 +1,4 @@
+import keySignatures.*;
 import meico.Meico;
 import meico.mei.Mei;
 import meico.mpm.elements.maps.GenericMap;
@@ -10,7 +11,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 
@@ -22,7 +23,7 @@ import java.util.List;
 public class Main {
     public static final String VERSION = "0.0.0";
 
-    private boolean keySignatures = false;                      // which key signatures are present and for how many measures?
+    private KeySignatures keySignatures = null;                 // which key signatures are present and for how many measures?
     private MeterSignatures meterSignatures = null;             // which meter signatures are present and for how many measures?
     private boolean voiceRanges = false;                        // compute the voice ranges
     private boolean voiceDistances = false;                     // compute the distances between neighboring voices, ie.e soprano-alto, alto-tenor, tenor-bass
@@ -34,6 +35,10 @@ public class Main {
 
     private final HashMap<Mei, List<Msm>> meis2Msms = new HashMap<>(); // the MEI files to be analyzed
 
+    /**
+     * entry point of the program, parses the command line arguments, and performs the requested analyses
+     * @param args
+     */
     public static void main(String[] args) {
         Main main = new Main();                                 // an instance of Main to hold the data to be analyzed, the tasks and the results
 
@@ -45,7 +50,7 @@ public class Main {
                     break;
 
                 case "-key-signatures":
-                    main.keySignatures = true;
+                    main.keySignatures = new KeySignatures();
                     break;
 
                 case "-meter-signatures":
@@ -107,29 +112,46 @@ public class Main {
             this.meis2Msms.get(mei).forEach(msm -> this.uniteFragmentedTimeSignatures(msm));   // cleanup fragmented measures (e.g., at repetitions) by uniting them wherever they sum up to the time signature before that position
         }
 
-        // meter signatures analysis
-        if (this.meterSignatures != null) {
-            int piecesWithNoMeterSig = 0;
-            for (Mei mei : this.meis2Msms.keySet()) {
-                System.out.println("Processing " + mei.getFile().getName());
-                MeterSignature meterSignature = MeterSignatures.hasMeterSignature(mei);
-                MeterSignatures meterSignaturesOfThis = new MeterSignatures();
-                if (meterSignature == null) {                                       // the music has no defined meter signature, so we add a default one
-                    ++piecesWithNoMeterSig;
-                } else {                                                            // otherwise we have to do some work, though, we check only the first mdiv/MSM, others are only verses with variants
-                    meterSignaturesOfThis = MeterSignatures.analyze(this.meis2Msms.get(mei).get(0));    // get the meter signatures in this music and for how many measures it plays
-                }
-                System.out.println("    " + meterSignaturesOfThis.toString());
-                this.meterSignatures.merge(meterSignaturesOfThis);
-            }
-            System.out.println("\nMeter Signature Statistics:");
-            System.out.println("    " + piecesWithNoMeterSig + " pieces without meter signature.");
-            System.out.println("    " + (this.meis2Msms.size() - piecesWithNoMeterSig) + " pieces with meter signature(s).");
-            System.out.println("    " + this.meterSignatures.size() + " different meter signatures found:");
-            System.out.println("    " + this.meterSignatures);
-        }
+        // run the analyses
+
+        if (this.keySignatures != null)
+            this.keySignatureAnalysis();
+
+        if (this.meterSignatures != null)
+            this.meterSignatureAnalysis();
 
         // TODO: more analyses ...
+    }
+
+    /**
+     * run key signature analysis
+     */
+    private void keySignatureAnalysis() {
+        // TODO ...
+    }
+
+    /**
+     * run meter signature analysis
+     */
+    private void meterSignatureAnalysis() {
+        int piecesWithNoMeterSig = 0;
+        for (Mei mei : this.meis2Msms.keySet()) {
+            System.out.println("Processing " + mei.getFile().getName());
+            MeterSignature meterSignature = MeterSignatures.hasMeterSignature(mei);
+            MeterSignatures meterSignaturesOfThis = new MeterSignatures();
+            if (meterSignature == null) {                                       // the music has no defined meter signature, so we add a default one
+                ++piecesWithNoMeterSig;
+            } else {                                                            // otherwise we have to do some work, though, we check only the first mdiv/MSM, others are only verses with variants
+                meterSignaturesOfThis = MeterSignatures.analyze(this.meis2Msms.get(mei).get(0));    // get the meter signatures in this music and for how many measures it plays
+            }
+            System.out.println("    " + meterSignaturesOfThis.toString());
+            this.meterSignatures.merge(meterSignaturesOfThis);
+        }
+        System.out.println("\nMeter Signature Statistics:");
+        System.out.println("    " + piecesWithNoMeterSig + " pieces without meter signature.");
+        System.out.println("    " + (this.meis2Msms.size() - piecesWithNoMeterSig) + " pieces with meter signature(s).");
+        System.out.println("    " + this.meterSignatures.size() + " different meter signatures found:");
+        System.out.println("    " + this.meterSignatures);
     }
 
     /**

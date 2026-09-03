@@ -30,10 +30,13 @@ public class MeterSignature {
 
     /**
      * Create a MeterSignature object from an MEI scoreDef, staffDef, layerDef, or meterSig element.
-     * @param element the element to parse
+     * @param element the MEI element to parse
      * @return the MeterSignature object or null
      */
     public static MeterSignature fromMei(Element element) {
+        if (element == null)
+            return null;
+
         Attribute count, unit, sym;
 
         switch (element.getLocalName()) {
@@ -83,9 +86,32 @@ public class MeterSignature {
     }
 
     /**
+     * Convert the MeterSignature object to an MEI meterSig element.
+     * @return the MEI element
+     */
+    public Element toMei() {
+        Element out = new Element("meterSig");
+        out.addAttribute(new Attribute("count", String.valueOf(this.numerator)));
+        out.addAttribute(new Attribute("unit", String.valueOf(this.denominator)));
+        return out;
+    }
+
+    /**
+     * Convert the MeterSignature object to an MSM timeSignature element.
+     * @return the MSM element
+     */
+    public Element toMsm() {
+        Element out = new Element("timeSignature");
+        out.addAttribute(new Attribute("date", ""));
+        out.addAttribute(new Attribute("numerator", String.valueOf(this.numerator)));
+        out.addAttribute(new Attribute("denominator", String.valueOf(this.denominator)));
+        return out;
+    }
+
+    /**
      * Equality comparison
      * @param obj   the reference object with which to compare.
-     * @return
+     * @return true if this object is the same as the obj argument; false otherwise.
      */
     @Override
     public boolean equals(Object obj) {
