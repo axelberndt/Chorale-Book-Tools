@@ -85,6 +85,9 @@ public class MeterSignatures extends HashMap<MeterSignature, Integer> {
      * @param msms the list of MSMs to analyze
      */
     public void analyze(List<Msm> msms) {
+        if (msms == null)
+            return;
+
         for (Msm msm : msms) {
             MeterSignatures meterSignatures = this.analyze(msm);
             this.merge(meterSignatures);    // accumulate the results
@@ -97,6 +100,9 @@ public class MeterSignatures extends HashMap<MeterSignature, Integer> {
      * @return the first meter signature in the first mdiv's first scoreDef/staffDeff/layerDef or a 0/0 meter signature if there is none
      */
     public static MeterSignature hasMeterSignature(Mei mei) {
+        if  (mei == null)
+            return null;
+
         ArrayList<Element> mdivs = mei.getAllMdivs();
         if (mdivs.isEmpty())
             return null;

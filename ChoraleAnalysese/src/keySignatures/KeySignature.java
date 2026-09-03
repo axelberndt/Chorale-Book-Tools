@@ -13,10 +13,10 @@ import java.util.Objects;
  * @author Axel Berndt
  */
 public class KeySignature {
-    private final PitchName pitchName;
-    private final Accidental keyAccidental;
-    private final KeyMode mode;
-    private final EnumMap<PitchName, Accidental> accidentals;
+    private final PitchName pitchName;                          // root of the key signature
+    private final Accidental keyAccidental;                     // accidental on the root (e.g. e flat major)
+    private final KeyMode mode;                                 // the mode of the key signature
+    private final EnumMap<PitchName, Accidental> accidentals;   // the accidentals of this key signature
     private final int hashCode;
 
     /**
@@ -116,15 +116,15 @@ public class KeySignature {
         if (element == null)
             return null;
 
-        if (element.getChildCount() == 0)   // in MSM we can only assume C major or a related key signature
-            return new KeySignature(null, null, null, new EnumMap<>(PitchName.class));
-
         EnumMap<PitchName, Accidental> accids = new EnumMap<>(PitchName.class);     // so far an empty map of accidentals, to be filled subsequently
-        for (Element accidental : element.getChildElements("accidental")) {
+
+        for (Element accidental : element.getChildElements("accidental")) {         // collect the accidentals
             PitchName pn = PitchName.valueOf(accidental.getAttributeValue("pitchname").toLowerCase());
             Accidental ac = Accidental.valueOf(Helper.accidDecimal2String(Double.parseDouble(accidental.getAttributeValue("value"))));
             accids.put(pn, ac);
         }
+
+        // TODO: "guestimate" the root pitch name etc. from the accidentals pattern and the final chord
 
         return new KeySignature(null, null, null, accids);
     }
@@ -168,6 +168,49 @@ public class KeySignature {
     }
 
     /**
+     * a getter for the pitch name of the root of the key signature
+     * @return
+     */
+    public PitchName getPitchName() {
+        return this.pitchName;
+    }
+
+    /**
+     * a getter for the accidental on the root of the key signature
+     * @return
+     */
+    public Accidental getKeyAccidental() {
+        return this.keyAccidental;
+    }
+
+    /**
+     * a getter for the mode of the key signature
+     * @return
+     */
+    public KeyMode getMode() {
+        return this.mode;
+    }
+
+    /**
+     * a getter for the key signature's accidentals
+     * @return
+     */
+    public EnumMap<PitchName, Accidental> getAccidentals() {
+        return this.accidentals;
+    }
+
+    /**
+     * is there key signature data?
+     * @return
+     */
+    public boolean isEmpty() {
+        return this.pitchName == null
+                && this.keyAccidental == null
+                && this.mode == null
+                && this.accidentals == null;    // can be empty, e.g. for C major
+    }
+
+    /**
      * Equality comparison
      * @param obj   the reference object with which to compare.
      * @return true if this object is the same as the obj argument; false otherwise.
@@ -199,14 +242,9 @@ public class KeySignature {
      */
     @Override
     public String toString() {
-        return this.pitchName.toString() + this.keyAccidental.toString() + " " + this.mode.toString() + " " + this.accidentals;
+        return ((this.pitchName != null) ?          this.pitchName.toString()       : "[no root pitch]")
+                + ((this.keyAccidental != null) ?   this.keyAccidental.toString()   : "") + " "
+                + ((this.mode != null) ?            this.mode.toString()            : "[no mode]") + " "
+                + ((this.accidentals != null) ?     this.accidentals.toString()     : "{}");
     }
 }
-
-// Dead Code
-//EnumMap<PitchName, Accidental> accids = new EnumMap<>(PitchName.class);
-//accids.put(PitchName.b, Accidental.f);
-//accids.put(PitchName.e, Accidental.f);
-//accids.put(PitchName.a, Accidental.f);
-//KeySignature ks = new KeySignature(PitchName.e, Accidental.f, KeyMode.major, accids);
-//System.out.println("DEBUG: " + ks);

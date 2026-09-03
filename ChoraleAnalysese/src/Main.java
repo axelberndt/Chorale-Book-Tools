@@ -11,7 +11,6 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 
@@ -112,13 +111,19 @@ public class Main {
             this.meis2Msms.get(mei).forEach(msm -> this.uniteFragmentedTimeSignatures(msm));   // cleanup fragmented measures (e.g., at repetitions) by uniting them wherever they sum up to the time signature before that position
         }
 
+        System.out.println("\n---------------------------------------------------------------------------\n");
+
         // run the analyses
 
         if (this.keySignatures != null)
             this.keySignatureAnalysis();
 
+        System.out.println("\n---------------------------------------------------------------------------\n");
+
         if (this.meterSignatures != null)
             this.meterSignatureAnalysis();
+
+        System.out.println("\n---------------------------------------------------------------------------\n");
 
         // TODO: more analyses ...
     }
@@ -127,7 +132,16 @@ public class Main {
      * run key signature analysis
      */
     private void keySignatureAnalysis() {
-        // TODO ...
+        for (Mei mei :  this.meis2Msms.keySet()) {
+            System.out.println("Processing " + mei.getFile().getName());
+            KeySignatures kss = KeySignatures.analyze(mei);
+            if (kss != null)
+                this.keySignatures.merge(kss);
+        }
+
+        System.out.println("\nKey Signature Statistics:");
+        System.out.println("    " + this.keySignatures.size() + " different key signatures found:");
+        System.out.println("    " + this.keySignatures);
     }
 
     /**
