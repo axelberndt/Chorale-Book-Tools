@@ -109,19 +109,24 @@ public class Main {
 
         // meter signatures analysis
         if (this.meterSignatures != null) {
+            int piecesWithNoMeterSig = 0;
             for (Mei mei : this.meis2Msms.keySet()) {
                 System.out.println("Processing " + mei.getFile().getName());
                 MeterSignature meterSignature = MeterSignatures.hasMeterSignature(mei);
                 MeterSignatures meterSignaturesOfThis = new MeterSignatures();
                 if (meterSignature == null) {                                       // the music has no defined meter signature, so we add a default one
-                    meterSignaturesOfThis.put(new MeterSignature(0.0, 0), 1);
+                    ++piecesWithNoMeterSig;
                 } else {                                                            // otherwise we have to do some work, though, we check only the first mdiv/MSM, others are only verses with variants
                     meterSignaturesOfThis = MeterSignatures.analyze(this.meis2Msms.get(mei).get(0));    // get the meter signatures in this music and for how many measures it plays
                 }
                 System.out.println("    " + meterSignaturesOfThis.toString());
                 this.meterSignatures.merge(meterSignaturesOfThis);
             }
-            System.out.println(this.meterSignatures.size() + " meter signatures found.\n    " + this.meterSignatures.toString());
+            System.out.println("\nMeter Signature Statistics:");
+            System.out.println("    " + piecesWithNoMeterSig + " pieces without meter signature.");
+            System.out.println("    " + (this.meis2Msms.size() - piecesWithNoMeterSig) + " pieces with meter signature(s).");
+            System.out.println("    " + this.meterSignatures.size() + " different meter signatures found:");
+            System.out.println("    " + this.meterSignatures);
         }
 
         // TODO: more analyses ...

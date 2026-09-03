@@ -34,7 +34,7 @@ public class MeterSignature {
      * @return the MeterSignature object or null
      */
     public static MeterSignature fromMei(Element element) {
-        Attribute count = null, unit = null, sym = null;
+        Attribute count, unit, sym;
 
         switch (element.getLocalName()) {
             case "scoreDef":

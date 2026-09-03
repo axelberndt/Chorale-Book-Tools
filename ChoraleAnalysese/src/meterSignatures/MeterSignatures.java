@@ -6,10 +6,9 @@ import nu.xom.Attribute;
 import nu.xom.Element;
 import nu.xom.Node;
 import nu.xom.Nodes;
+import supplementary.Supplementary;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * This class analyzes a given MEI to find out which meter signatures are present and in how many measures.
@@ -102,10 +101,11 @@ public class MeterSignatures extends HashMap<MeterSignature, Integer> {
         if (mdivs.isEmpty())
             return null;
 
-        // TODO: die gesuchten Elemente dürfen nicht in einer <section> stehen
-        Nodes defs = mdivs.get(0).query("descendant::*[local-name()='scoreDef' or local-name()='staffDef' or local-name()='layerDef' or local-name()='meterSig']");    // we check only the first mdiv, others are only verses with variants
-        for (Node def : defs) {
-            MeterSignature meterSignature = MeterSignature.fromMei((Element) def);
+        TreeSet<String> findThis = new TreeSet<>(Arrays.asList("scoreDef", "staffDef", "layerDef", "meterSig"));    // meter signature information can be found only in these elements
+        TreeSet<String> stopHere = new TreeSet<>(Arrays.asList("section"));                                 // we do not check for meter signatures in the musical text, only at the beginning in the initial scoreDef
+        List<Element> candidates = Supplementary.depthFirstSearch(mdivs.getFirst(), findThis, stopHere);    // we check only the first mdiv, others are only verses with variants
+        for (Element candidate : candidates) {
+            MeterSignature meterSignature = MeterSignature.fromMei(candidate);
             if (meterSignature != null)
                 return meterSignature;
         }
