@@ -111,46 +111,50 @@ public class Main {
             this.meis2Msms.get(mei).forEach(msm -> this.uniteFragmentedTimeSignatures(msm));   // cleanup fragmented measures (e.g., at repetitions) by uniting them wherever they sum up to the time signature before that position
         }
 
-        System.out.println("\n---------------------------------------------------------------------------\n");
+        System.out.println("\n---------------------------------------------------------------------------");
 
         // run the analyses
 
         if (this.keySignatures != null)
             this.keySignatureAnalysis();
 
-        System.out.println("\n---------------------------------------------------------------------------\n");
+        System.out.println("\n---------------------------------------------------------------------------");
 
         if (this.meterSignatures != null)
             this.meterSignatureAnalysis();
 
-        System.out.println("\n---------------------------------------------------------------------------\n");
-
         // TODO: more analyses ...
+
+        System.out.println("\n---------------------------------------------------------------------------");
     }
 
     /**
      * run key signature analysis
      */
     private void keySignatureAnalysis() {
+//        System.out.println("\n");
         for (Mei mei :  this.meis2Msms.keySet()) {
-            System.out.println("Processing " + mei.getFile().getName());
+//            System.out.println("Processing " + mei.getFile().getName());
             KeySignatures kss = KeySignatures.analyze(mei);
+//            KeySignatures kss = KeySignatures.analyze(this.meis2Msms.get(mei).get(0));
             if (kss != null)
                 this.keySignatures.merge(kss);
         }
 
-        System.out.println("\nKey Signature Statistics:");
-        System.out.println("    " + this.keySignatures.size() + " different key signatures found:");
-        System.out.println("    " + this.keySignatures);
+        System.out.println("\nKey Signature Statistics");
+        System.out.println(this.keySignatures.size() + " different key signatures found:\n");
+        for (KeySignature ks : this.keySignatures.keySet())
+            System.out.println(this.keySignatures.get(ks).size() + "\t" + ks);
     }
 
     /**
      * run meter signature analysis
      */
     private void meterSignatureAnalysis() {
+//        System.out.println("\n");
         int piecesWithNoMeterSig = 0;
         for (Mei mei : this.meis2Msms.keySet()) {
-            System.out.println("Processing " + mei.getFile().getName());
+//            System.out.println("Processing " + mei.getFile().getName());
             MeterSignature meterSignature = MeterSignatures.hasMeterSignature(mei);
             MeterSignatures meterSignaturesOfThis = new MeterSignatures();
             if (meterSignature == null) {                                       // the music has no defined meter signature, so we add a default one
@@ -158,14 +162,15 @@ public class Main {
             } else {                                                            // otherwise we have to do some work, though, we check only the first mdiv/MSM, others are only verses with variants
                 meterSignaturesOfThis = MeterSignatures.analyze(this.meis2Msms.get(mei).get(0));    // get the meter signatures in this music and for how many measures it plays
             }
-            System.out.println("    " + meterSignaturesOfThis.toString());
+//            System.out.println("    " + meterSignaturesOfThis.toString());
             this.meterSignatures.merge(meterSignaturesOfThis);
         }
-        System.out.println("\nMeter Signature Statistics:");
-        System.out.println("    " + piecesWithNoMeterSig + " pieces without meter signature.");
-        System.out.println("    " + (this.meis2Msms.size() - piecesWithNoMeterSig) + " pieces with meter signature(s).");
-        System.out.println("    " + this.meterSignatures.size() + " different meter signatures found:");
-        System.out.println("    " + this.meterSignatures);
+        System.out.println("\nMeter Signature Statistics");
+        System.out.println(piecesWithNoMeterSig + " pieces without meter signature.");
+        System.out.println((this.meis2Msms.size() - piecesWithNoMeterSig) + " pieces with meter signature(s).");
+        System.out.println(this.meterSignatures.size() + " different meter signatures found:\n");
+        for (MeterSignature ms :  this.meterSignatures.keySet())
+            System.out.println(ms + "\t" + this.meterSignatures.get(ms));
     }
 
     /**

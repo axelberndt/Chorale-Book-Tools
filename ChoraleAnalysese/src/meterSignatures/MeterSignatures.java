@@ -107,8 +107,8 @@ public class MeterSignatures extends HashMap<MeterSignature, Integer> {
         if (mdivs.isEmpty())
             return null;
 
-        TreeSet<String> findThis = new TreeSet<>(Arrays.asList("scoreDef", "staffDef", "layerDef", "meterSig"));    // meter signature information can be found only in these elements
-        TreeSet<String> stopHere = new TreeSet<>(Arrays.asList("section"));                                 // we do not check for meter signatures in the musical text, only at the beginning in the initial scoreDef
+        TreeSet<String> findThis = new TreeSet<>(List.of("scoreDef", "staffDef", "layerDef", "meterSig"));    // meter signature information can be found only in these elements
+        TreeSet<String> stopHere = new TreeSet<>(List.of("section"));                                 // we do not check for meter signatures in the musical text, only at the beginning in the initial scoreDef
         List<Element> candidates = Supplementary.depthFirstSearch(mdivs.getFirst(), findThis, stopHere);    // we check only the first mdiv, others are only verses with variants
         for (Element candidate : candidates) {
             MeterSignature meterSignature = MeterSignature.fromMei(candidate);
@@ -163,7 +163,7 @@ public class MeterSignatures extends HashMap<MeterSignature, Integer> {
                 unit = element.getAttribute("meter.unit");
             if ((count != null) && (unit != null)) {
                 String str = count.getValue();
-                Double numerator = 0.0;
+                double numerator = 0.0;
                 String num = "";
                 for (int i = 0; i < str.length(); ++i) {
                     if (((str.charAt(i) >= '0') && (str.charAt(i) <= '9')) || (str.charAt(i) == '.')) { // if character is a number/digit or a decimal dot

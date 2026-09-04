@@ -1,11 +1,15 @@
 package keySignatures;
 
 import meico.mei.Helper;
+import meico.mei.Mei;
+import meico.msm.Msm;
+import meico.supplementary.KeyValue;
 import nu.xom.Attribute;
 import nu.xom.Element;
 import nu.xom.Elements;
 
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Objects;
 
 /**
@@ -13,6 +17,48 @@ import java.util.Objects;
  * @author Axel Berndt
  */
 public class KeySignature {
+    private static final KeyValue<PitchName, Accidental>[] circleOfFifths = new KeyValue[]{
+            new KeyValue<>(PitchName.f, Accidental.f),
+            new KeyValue<>(PitchName.c, Accidental.f),
+            new KeyValue<>(PitchName.g, Accidental.f),
+            new KeyValue<>(PitchName.d, Accidental.f),
+            new KeyValue<>(PitchName.a, Accidental.f),
+            new KeyValue<>(PitchName.e, Accidental.f),
+            new KeyValue<>(PitchName.b, Accidental.f),
+            new KeyValue<>(PitchName.f, null),
+            new KeyValue<>(PitchName.c, null),  // index=8
+            new KeyValue<>(PitchName.g, null),
+            new KeyValue<>(PitchName.d, null),
+            new KeyValue<>(PitchName.a, null),
+            new KeyValue<>(PitchName.e, null),
+            new KeyValue<>(PitchName.b, null),
+            new KeyValue<>(PitchName.f, Accidental.s),
+            new KeyValue<>(PitchName.c, Accidental.s),
+            new KeyValue<>(PitchName.g, Accidental.s),
+            new KeyValue<>(PitchName.d, Accidental.s),
+            new KeyValue<>(PitchName.a, Accidental.s),
+            new KeyValue<>(PitchName.e, Accidental.s),
+            new KeyValue<>(PitchName.b, Accidental.s)
+    };
+    private static final EnumMap<PitchName, Integer> pitchNameToInt = new EnumMap<>(PitchName.class){{
+            put(PitchName.c, 0);
+            put(PitchName.d, 1);
+            put(PitchName.e, 2);
+            put(PitchName.f, 3);
+            put(PitchName.g, 4);
+            put(PitchName.a, 5);
+            put(PitchName.b, 6);
+    }};
+    private static final HashMap<Integer, KeyMode> diatonicIntervalToMode = new HashMap<>(){{
+            put(0, KeyMode.major);
+            put(1, KeyMode.dorian);
+            put(2, KeyMode.phrygian);
+            put(3, KeyMode.lydian);
+            put(4, KeyMode.mixolydian);
+            put(5, KeyMode.minor);
+            put(6, KeyMode.locrian);
+    }};
+
     private final PitchName pitchName;                          // root of the key signature
     private final Accidental keyAccidental;                     // accidental on the root (e.g. e flat major)
     private final KeyMode mode;                                 // the mode of the key signature
@@ -63,6 +109,8 @@ public class KeySignature {
                 accid = element.getAttribute("key.accid");
                 mode = element.getAttribute("key.mode");
                 sig = element.getAttribute("keysig");
+                if (sig == null)                            // in older versions of MEI, e.g. 3.0, the attribute has a different name
+                    sig = element.getAttribute("key.sig");  // so, we have to check this as well
                 break;
             case "keySig":
                 pname = element.getAttribute("pname");
@@ -95,8 +143,8 @@ public class KeySignature {
             for (Element keyAccid : keyAccids) {
                 if ((keyAccid.getAttribute("pname") == null) || (keyAccid.getAttribute("accid") == null))
                     continue;
-                PitchName kpn = PitchName.valueOf(keyAccid.getAttribute("pname").getValue());
-                Accidental kac = Accidental.valueOf(keyAccid.getAttribute("accid").getValue());
+                PitchName kpn = PitchName.valueOf(keyAccid.getAttributeValue("pname"));
+                Accidental kac = Accidental.valueOf(keyAccid.getAttributeValue("accid"));
                 accids.put(kpn, kac);
             }
         }
@@ -117,16 +165,67 @@ public class KeySignature {
             return null;
 
         EnumMap<PitchName, Accidental> accids = new EnumMap<>(PitchName.class);     // so far an empty map of accidentals, to be filled subsequently
+        Accidental lastAccid = null;                                                // we use this later to guesstimate the key signature
 
         for (Element accidental : element.getChildElements("accidental")) {         // collect the accidentals
             PitchName pn = PitchName.valueOf(accidental.getAttributeValue("pitchname").toLowerCase());
             Accidental ac = Accidental.valueOf(Helper.accidDecimal2String(Double.parseDouble(accidental.getAttributeValue("value"))));
             accids.put(pn, ac);
+            lastAccid = ac;
         }
 
-        // TODO: "guestimate" the root pitch name etc. from the accidentals pattern and the final chord
+        // "guesstimate" the root pitch name etc. from the accidentals pattern and the final chord
+        PitchName majorRoot;
+        Accidental majorRootAccid = null;
+        // first, guess a major scale from the accidentals pattern
+        if (lastAccid == null) {
+            majorRoot = PitchName.c;
+        } else {
+            switch (lastAccid) {
+                case f:
+                    majorRoot = circleOfFifths[8 - (accids.size())].getKey();
+                    majorRootAccid = circleOfFifths[8].getValue();
+                    break;
+                case s:
+                    majorRoot = circleOfFifths[8 + (accids.size())].getKey();
+                    majorRootAccid = circleOfFifths[8].getValue();
+                    break;
+                default:                                                // if we have a non-standard sharp or flat accidental
+                    return new KeySignature(null, null, null, accids);  // we have no idea about the key signature
+            }
+        }
 
-        return new KeySignature(null, null, null, accids);
+        // now we have a guess for a major key signature, however, it could be a related one (minor, dorian etc.), so we need to check the final chord and find its root
+        Element lowestNote = null;
+        int lowestPitch = 127;
+        for (Element part : element.getDocument().getRootElement().getChildElements("part")) {  // go through all parts
+            Element score = part.getFirstChildElement("dated").getFirstChildElement("score");
+            if (score == null)
+                continue;
+
+            Elements notes = score.getChildElements("note");
+            if (notes.size() == 0)
+                continue;
+
+            Element lastNote =  notes.get(notes.size() - 1);
+            int midiPitch = (int)Double.parseDouble(lastNote.getAttributeValue("midi.pitch"));
+            if (midiPitch < lowestPitch) {
+                lowestPitch = midiPitch;
+                lowestNote = lastNote;
+            }
+        }
+
+        if (lowestNote == null) {
+            return  new KeySignature(majorRoot, majorRootAccid, KeyMode.major, accids);
+        }
+
+        String pitchname = lowestNote.getAttributeValue("pitchname").toLowerCase();
+        PitchName rootPitchName = PitchName.valueOf(pitchname);
+        Accidental rootAccid = accids.get(rootPitchName);
+        int diatornicDistance = (pitchNameToInt.get(rootPitchName) - pitchNameToInt.get(majorRoot) + 7) % 7;
+        KeyMode keyMode = diatonicIntervalToMode.get(diatornicDistance);
+
+        return new KeySignature(rootPitchName, rootAccid, keyMode, accids);
     }
 
     /**

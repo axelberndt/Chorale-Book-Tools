@@ -11,7 +11,7 @@ import java.util.*;
  * This class analyzes a given MEI/MSM to find out which key signatures are present.
  * @author Axel Berndt
  */
-public class KeySignatures extends HashMap<KeySignature, Integer> {
+public class KeySignatures extends HashMap<KeySignature, SortedSet<String>> {
     /**
      * constructor
      */
@@ -34,13 +34,13 @@ public class KeySignatures extends HashMap<KeySignature, Integer> {
 
         KeySignatures keySignatures = new KeySignatures();
 
-        TreeSet<String> findThis = new TreeSet<>(Arrays.asList("scoreDef", "staffDef", "layerDef", "keySig"));    // key signature information can be found only in these elements
-        TreeSet<String> stopHere = new TreeSet<>(Arrays.asList("section"));                                 // we do not check for key signatures in the musical text, only at the beginning in the initial scoreDef
+        TreeSet<String> findThis = new TreeSet<>(List.of("scoreDef", "staffDef", "layerDef", "keySig"));    // key signature information can be found only in these elements
+        TreeSet<String> stopHere = new TreeSet<>(List.of("section"));                                 // we do not check for key signatures in the musical text, only at the beginning in the initial scoreDef
         List<Element> candidates = Supplementary.depthFirstSearch(mdivs.getFirst(), findThis, stopHere);    // we check only the first mdiv, others are only verses with variants
         for (Element candidate : candidates) {
             KeySignature keySignature = KeySignature.fromMei(candidate);
             if ((keySignature != null) && !keySignature.isEmpty()) {    // we return the first key signature that has not just null in it
-                keySignatures.put(keySignature, 1);
+                keySignatures.put(keySignature, new TreeSet<>(List.of(mei.getFile().getName())));
                 return keySignatures;
             }
         }
@@ -68,15 +68,18 @@ public class KeySignatures extends HashMap<KeySignature, Integer> {
             }
         }
 
-        if  (keySignatureMap == null)   // if no non-empty keySignatureMap was found
-            return null;                // done
-
         KeySignatures keySignatures = new KeySignatures();
+
+        if  (keySignatureMap == null) {
+            KeySignature keySignature = KeySignature.fromMsm(msm.getRootElement());     // the root element is, of course, no <keySignature> element; this here enforces that also an MPM with no <keySignatureMap> gets processed; this is usually the case, if the <keySignatureMap> is empty (e.g. C major, D dorian etc.).
+            keySignatures.put(keySignature, new TreeSet<>(List.of(msm.getFile().getName())));
+            return keySignatures;
+        }
 
         for (Element ks :  keySignatureMap.getChildElements()) {
             KeySignature keySignature = KeySignature.fromMsm(ks);
             if ((keySignature != null) && !keySignature.isEmpty()) {
-                keySignatures.put(keySignature, 1);
+                keySignatures.put(keySignature, new TreeSet<>(List.of(msm.getFile().getName())));
                 return keySignatures;
             }
         }
@@ -89,8 +92,32 @@ public class KeySignatures extends HashMap<KeySignature, Integer> {
      * @param other the other KeySignatures object
      */
     public void merge(KeySignatures other) {
-        for (KeySignature key : other.keySet())
-            this.merge(key, other.get(key), Integer::sum);
+        for (KeySignature key : other.keySet()) {
+            if (this.containsKey(key))
+                this.get(key).addAll(other.get(key));
+            else
+                this.put(key, other.get(key));
+        }
+    }
+
+    /**
+     * Match the key signature that is encoded in MEI to the key signature that is automatically analyzed from the provided MSM.
+     * This method can be used to identify key signature-related encoding errors in the MEI.
+     * @param mei the MEI to be analyzed
+     * @param msm the MSM should correspond with the MEI
+     * @return true if the result is identical, else false
+     */
+    public static boolean match(Mei mei, Msm msm) {
+        KeySignatures keySigsMei = KeySignatures.analyze(mei);
+        KeySignatures keySigsMsm = KeySignatures.analyze(msm);
+
+        KeySignature ksMei = keySigsMei.keySet().iterator().next();
+        KeySignature ksMsm = keySigsMsm.keySet().iterator().next();
+
+//        if (!ksMei.equals(ksMsm))
+//            System.out.println("Check this: " + mei.getFile().getName() + " ... " + ksMei + " / " + ksMsm);
+
+        return ksMei.equals(ksMsm);
     }
 
 }
