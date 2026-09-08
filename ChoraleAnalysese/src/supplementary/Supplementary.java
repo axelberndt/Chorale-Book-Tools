@@ -20,11 +20,14 @@ public class Supplementary {
      */
     public static List<Element> depthFirstSearch(Element root, SortedSet<String> findThis, SortedSet<String> stopHere) {
         ArrayList<Element> out = new ArrayList<>();
-        if ((root == null) || (findThis == null) || (stopHere == null) || (stopHere.contains(root.getLocalName())))
+        if ((root == null) || (findThis == null))
             return out;
 
         if (findThis.contains(root.getLocalName()))
             out.add(root);
+
+        if ((stopHere != null) && stopHere.contains(root.getLocalName()))
+            return out;
 
         for (Element child : root.getChildElements())
             out.addAll(depthFirstSearch(child, findThis, stopHere));

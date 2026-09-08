@@ -35,7 +35,7 @@ public class KeySignatures extends HashMap<KeySignature, SortedSet<String>> {
         KeySignatures keySignatures = new KeySignatures();
 
         TreeSet<String> findThis = new TreeSet<>(List.of("scoreDef", "staffDef", "layerDef", "keySig"));    // key signature information can be found only in these elements
-        TreeSet<String> stopHere = new TreeSet<>(List.of("section"));                                 // we do not check for key signatures in the musical text, only at the beginning in the initial scoreDef
+        TreeSet<String> stopHere = new TreeSet<>(List.of("section", "keySig"));                                 // we do not check for key signatures in the musical text, only at the beginning in the initial scoreDef
         List<Element> candidates = Supplementary.depthFirstSearch(mdivs.getFirst(), findThis, stopHere);    // we check only the first mdiv, others are only verses with variants
         for (Element candidate : candidates) {
             KeySignature keySignature = KeySignature.fromMei(candidate);
@@ -119,5 +119,4 @@ public class KeySignatures extends HashMap<KeySignature, SortedSet<String>> {
 
         return ksMei.equals(ksMsm);
     }
-
 }

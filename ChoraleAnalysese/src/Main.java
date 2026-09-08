@@ -7,6 +7,8 @@ import meterSignatures.MeterSignature;
 import meterSignatures.MeterSignatures;
 import nu.xom.*;
 import org.xml.sax.SAXException;
+import voiceAnalyses.PitchHistograms;
+import voiceAnalyses.VoiceDistances;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
@@ -24,8 +26,8 @@ public class Main {
 
     private KeySignatures keySignatures = null;                 // which key signatures are present and for how many measures?
     private MeterSignatures meterSignatures = null;             // which meter signatures are present and for how many measures?
-    private boolean voiceRanges = false;                        // compute the voice ranges
-    private boolean voiceDistances = false;                     // compute the distances between neighboring voices, ie.e soprano-alto, alto-tenor, tenor-bass
+    private PitchHistograms pitchHistograms = null;             // compute the pitch histogram for each musical voice
+    private VoiceDistances voiceDistances = null;               // compute the distances between neighboring voices, ie.e soprano-alto, alto-tenor, tenor-bass
     private boolean frameIntervals = false;                     // compute the intervalls between soprano and bass part
     private boolean melodicity = false;                         // compute melodic intervals for each voice
     private boolean chords = false;                             // perform harmonic analysis
@@ -56,12 +58,12 @@ public class Main {
                     main.meterSignatures = new MeterSignatures();
                     break;
 
-                case"-voice-ranges":
-                    main.voiceRanges = true;
+                case"-pitch-histograms":
+                    main.pitchHistograms = new PitchHistograms();
                     break;
 
                 case "-voice-distances":
-                    main.voiceDistances = true;
+                    main.voiceDistances = new VoiceDistances();
                     break;
 
                 case "-frame-intervals":
@@ -123,6 +125,16 @@ public class Main {
         if (this.meterSignatures != null)
             this.meterSignatureAnalysis();
 
+        System.out.println("\n---------------------------------------------------------------------------");
+
+        if (this.pitchHistograms != null)
+            this.pitchHistogramAnalysis();
+
+        System.out.println("\n---------------------------------------------------------------------------");
+
+        if (this.voiceDistances != null)
+            this.voiceDistancesAnalysis();
+
         // TODO: more analyses ...
 
         System.out.println("\n---------------------------------------------------------------------------");
@@ -171,6 +183,31 @@ public class Main {
         System.out.println(this.meterSignatures.size() + " different meter signatures found:\n");
         for (MeterSignature ms :  this.meterSignatures.keySet())
             System.out.println(ms + "\t" + this.meterSignatures.get(ms));
+    }
+
+    /**
+     * run a voice range analysis, it will print a histogram of MIDI pitches (int array) for each musical voice
+     */
+    private void pitchHistogramAnalysis() {
+        for (Mei mei : this.meis2Msms.keySet()) {
+//            System.out.println("Processing " + mei.getFile().getName());
+            PitchHistograms pitchHistogramsOfThis = PitchHistograms.analyze(this.meis2Msms.get(mei).get(0));
+            if (pitchHistogramsOfThis == null)
+                continue;
+//            System.out.println(pitchHistogramsOfThis.toString());
+            this.pitchHistograms.merge(pitchHistogramsOfThis);
+        }
+
+        System.out.println("\nPitch Histogram per Voice");
+        for (String key : this.pitchHistograms.keySet())
+            System.out.println("\t" + this.pitchHistograms.get(key).toString());
+    }
+
+    /**
+     * run an analysis of the distances between neighboring musical voices
+     */
+    private void voiceDistancesAnalysis() {
+        // TODO ...
     }
 
     /**
@@ -320,6 +357,7 @@ public class Main {
 
         mei.resolveCopyofsAndSameas();                                      // this is also done during MEI-to-MSM conversion, execute this line if the MEI data should be altered before further analyses
 //        mei.resolveExpansions();                                            // execute this line if the MEI data should be altered before further analyses
+        mei.layersToStaffs();                                               // separate individual voices from polyphonic staffs
         this.meis2Msms.put(mei, mei.exportMsm(720, true, true, true));   // we immediately also create the MSMs, as they are needed for the analyses
         return true;
     }
@@ -332,7 +370,7 @@ public class Main {
         System.out.println("[-?] or [-help]                show this help text");
         System.out.println("[-key-signatures]              get key signatures");
         System.out.println("[-meter-signatures]            get meter signatures");
-        System.out.println("[-voice-ranges]                get voice ranges");
+        System.out.println("[-pitch-histograms]            get pitch histograms for each musical voice");
         System.out.println("[-voice-distances]             get distances between voices");
         System.out.println("[-frame-intervals]             get frame intervals between soprano and bass");
         System.out.println("[-melodicity]                  get melodic intervals");

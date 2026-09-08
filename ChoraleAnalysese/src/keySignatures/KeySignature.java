@@ -1,8 +1,6 @@
 package keySignatures;
 
 import meico.mei.Helper;
-import meico.mei.Mei;
-import meico.msm.Msm;
 import meico.supplementary.KeyValue;
 import nu.xom.Attribute;
 import nu.xom.Element;
@@ -327,7 +325,7 @@ public class KeySignature {
     }
 
     /**
-     * Hash code generation
+     * Hash code output
      * @return
      */
     @Override

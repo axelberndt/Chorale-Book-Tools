@@ -122,7 +122,7 @@ public class MeterSignature {
     }
 
     /**
-     * Hash code generation
+     * Hash code output
      * @return
      */
     @Override
