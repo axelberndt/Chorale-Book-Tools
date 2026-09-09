@@ -22,14 +22,14 @@ public class PitchHistogram {
      */
     public PitchHistogram(Element msmPart) throws IllegalArgumentException {
         if ((msmPart == null) || !msmPart.getLocalName().equals("part"))
-            throw new IllegalArgumentException("Argument msmPart must be a part element!");
+            throw new IllegalArgumentException("Argument msmPart must be a <part> element!");
 
         this.msmPart = msmPart;
 
-        this.hashCode = Objects.hash(this.msmPart.getAttributeValue("number"), this.msmPart.getAttributeValue("name")); // content-based hash
-//        this.hashCode = super.hashCode();
-
         this.analyze();
+
+        this.hashCode = Objects.hash(this.msmPart.getAttributeValue("number"), this.msmPart.getAttributeValue("name"), Arrays.hashCode(this.midiPitches)); // content-based hash
+//        this.hashCode = super.hashCode();
     }
 
     /**

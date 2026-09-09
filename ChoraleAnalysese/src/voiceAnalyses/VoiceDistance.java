@@ -11,8 +11,8 @@ import java.util.TreeMap;
  * @author Axel Berndt
  */
 public class VoiceDistance extends TreeMap<Integer, Integer> {
-    private final Element voice1;
-    private final Element voice2;
+    private final Element msmPart1;
+    private final Element msmPart2;
     private final int hashCode;
 
     /**
@@ -21,28 +21,40 @@ public class VoiceDistance extends TreeMap<Integer, Integer> {
      * @param msmPart2
      */
     public VoiceDistance(Element msmPart1, Element msmPart2) {
-        super();
-        this.voice1 = msmPart1;
-        this.voice2 = msmPart2;
+        if ((msmPart1 == null) || (msmPart2 == null) || !msmPart1.getLocalName().equals("part") || !msmPart2.getLocalName().equals("part"))
+            throw new IllegalArgumentException("A VoiceDistance object requires two non-null <part> elements!");
 
-        this.hashCode = Objects.hash(this.voice1.getAttributeValue("number"), this.voice1.getAttributeValue("name"), this.voice2.getAttributeValue("number"), this.voice2.getAttributeValue("name")); // content-based hash
+        super();
+        this.msmPart1 = msmPart1;
+        this.msmPart2 = msmPart2;
+
+        this.analyze();
+
+        this.hashCode = Objects.hash(this.msmPart1.getAttributeValue("number"), this.msmPart1.getAttributeValue("name"), this.msmPart2.getAttributeValue("number"), this.msmPart2.getAttributeValue("name")); // content-based hash
 //        this.hashCode = super.hashCode();
     }
 
     /**
-     * get an identifying String for this voice1
-     * @return voice1 number and name
+     * perform the analysis of both voices
      */
-    public String getVoice1() {
-        return this.voice1.getAttributeValue("number") + " " + this.voice1.getAttributeValue("name");
+    private void analyze() {
+        // TODO: ...
     }
 
     /**
-     * get an identifying String for this voice2
-     * @return voice2 number and name
+     * get an identifying String for this msmPart1
+     * @return msmPart1 number and name
+     */
+    public String getVoice1() {
+        return this.msmPart1.getAttributeValue("number") + " " + this.msmPart1.getAttributeValue("name");
+    }
+
+    /**
+     * get an identifying String for this msmPart2
+     * @return msmPart2 number and name
      */
     public String getVoice2() {
-        return this.voice2.getAttributeValue("number") + " " + this.voice2.getAttributeValue("name");
+        return this.msmPart2.getAttributeValue("number") + " " + this.msmPart2.getAttributeValue("name");
     }
 
     /**
@@ -80,6 +92,6 @@ public class VoiceDistance extends TreeMap<Integer, Integer> {
      */
     @Override
     public String toString() {
-        return this.voice1.getAttributeValue("number") + " " + this.voice1.getAttributeValue("name") + " / " + this.voice1.getAttributeValue("number") + " " + this.voice1.getAttributeValue("name") + ":\n" + super.toString();
+        return this.msmPart1.getAttributeValue("number") + " " + this.msmPart1.getAttributeValue("name") + " / " + this.msmPart1.getAttributeValue("number") + " " + this.msmPart1.getAttributeValue("name") + ":\n" + super.toString();
     }
 }

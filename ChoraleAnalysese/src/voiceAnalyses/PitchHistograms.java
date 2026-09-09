@@ -53,6 +53,10 @@ public class PitchHistograms extends HashMap<String, PitchHistogram> {
         }
     }
 
+    /**
+     * print results
+     * @return
+     */
     @Override
     public String toString() {
         String out = "";
