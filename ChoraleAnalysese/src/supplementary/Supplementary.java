@@ -2,9 +2,7 @@ package supplementary;
 
 import nu.xom.Element;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedSet;
+import java.util.*;
 
 /**
  * A class for useful methods not associated to another class.

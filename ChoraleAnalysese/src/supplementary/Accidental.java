@@ -1,4 +1,4 @@
-package keySignatures;
+package supplementary;
 
 /**
  * An enumeration of accidentals.

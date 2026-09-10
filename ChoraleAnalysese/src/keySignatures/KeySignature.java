@@ -5,6 +5,8 @@ import meico.supplementary.KeyValue;
 import nu.xom.Attribute;
 import nu.xom.Element;
 import nu.xom.Elements;
+import supplementary.Accidental;
+import supplementary.PitchName;
 
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -15,7 +17,7 @@ import java.util.Objects;
  * @author Axel Berndt
  */
 public class KeySignature {
-    private static final KeyValue<PitchName, Accidental>[] circleOfFifths = new KeyValue[]{
+    public static final KeyValue<PitchName, Accidental>[] CIRCLE_OF_FIFTHS = new KeyValue[]{
             new KeyValue<>(PitchName.f, Accidental.f),
             new KeyValue<>(PitchName.c, Accidental.f),
             new KeyValue<>(PitchName.g, Accidental.f),
@@ -38,23 +40,15 @@ public class KeySignature {
             new KeyValue<>(PitchName.e, Accidental.s),
             new KeyValue<>(PitchName.b, Accidental.s)
     };
-    private static final EnumMap<PitchName, Integer> pitchNameToInt = new EnumMap<>(PitchName.class){{
-            put(PitchName.c, 0);
-            put(PitchName.d, 1);
-            put(PitchName.e, 2);
-            put(PitchName.f, 3);
-            put(PitchName.g, 4);
-            put(PitchName.a, 5);
-            put(PitchName.b, 6);
-    }};
-    private static final HashMap<Integer, KeyMode> diatonicIntervalToMode = new HashMap<>(){{
-            put(0, KeyMode.major);
-            put(1, KeyMode.dorian);
-            put(2, KeyMode.phrygian);
-            put(3, KeyMode.lydian);
-            put(4, KeyMode.mixolydian);
-            put(5, KeyMode.minor);
-            put(6, KeyMode.locrian);
+
+    public static final HashMap<Integer, KeyMode> DIATONIC_INTERVAL_TO_MODE = new HashMap<>(){{
+        put(0, KeyMode.major);
+        put(1, KeyMode.dorian);
+        put(2, KeyMode.phrygian);
+        put(3, KeyMode.lydian);
+        put(4, KeyMode.mixolydian);
+        put(5, KeyMode.minor);
+        put(6, KeyMode.locrian);
     }};
 
     private final PitchName pitchName;                          // root of the key signature
@@ -181,12 +175,12 @@ public class KeySignature {
         } else {
             switch (lastAccid) {
                 case f:
-                    majorRoot = circleOfFifths[8 - (accids.size())].getKey();
-                    majorRootAccid = circleOfFifths[8].getValue();
+                    majorRoot = CIRCLE_OF_FIFTHS[8 - (accids.size())].getKey();
+                    majorRootAccid = CIRCLE_OF_FIFTHS[8].getValue();
                     break;
                 case s:
-                    majorRoot = circleOfFifths[8 + (accids.size())].getKey();
-                    majorRootAccid = circleOfFifths[8].getValue();
+                    majorRoot = CIRCLE_OF_FIFTHS[8 + (accids.size())].getKey();
+                    majorRootAccid = CIRCLE_OF_FIFTHS[8].getValue();
                     break;
                 default:                                                // if we have a non-standard sharp or flat accidental
                     return new KeySignature(null, null, null, accids);  // we have no idea about the key signature
@@ -220,8 +214,8 @@ public class KeySignature {
         String pitchname = lowestNote.getAttributeValue("pitchname").toLowerCase();
         PitchName rootPitchName = PitchName.valueOf(pitchname);
         Accidental rootAccid = accids.get(rootPitchName);
-        int diatornicDistance = (pitchNameToInt.get(rootPitchName) - pitchNameToInt.get(majorRoot) + 7) % 7;
-        KeyMode keyMode = diatonicIntervalToMode.get(diatornicDistance);
+        int diatornicDistance = (rootPitchName.ordinal() - majorRoot.ordinal() + 7) % 7;
+        KeyMode keyMode = DIATONIC_INTERVAL_TO_MODE.get(diatornicDistance);
 
         return new KeySignature(rootPitchName, rootAccid, keyMode, accids);
     }
