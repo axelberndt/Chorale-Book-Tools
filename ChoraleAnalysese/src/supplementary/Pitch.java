@@ -9,7 +9,7 @@ import java.util.Objects;
  * This class represents a musical pitch.
  * @author Axel Berndt
  */
-public class Pitch {
+public class Pitch implements Comparable<Pitch> {
 //    public static final EnumMap<PitchName, Integer> PITCH_NAME_TO_INTEGER = new EnumMap<>(PitchName.class){{
 //        put(PitchName.c, 0);
 //        put(PitchName.d, 1);
@@ -87,9 +87,9 @@ public class Pitch {
      */
     public Pitch(Element msmNote) {
         this.pitchName = PitchName.valueOf(msmNote.getAttributeValue("pitchname"));
-        this.accidental = Accidental.valueOf(msmNote.getAttributeValue("accidentals"));
-        this.octave = Integer.parseInt(msmNote.getAttributeValue("octave"));
-        this.midi = Integer.parseInt(msmNote.getAttributeValue("midi.pitch"));
+        this.accidental = Accidental.valueOf(Helper.accidDecimal2String(Double.parseDouble(msmNote.getAttributeValue("accidentals"))));
+        this.octave = (int) Double.parseDouble(msmNote.getAttributeValue("octave"));
+        this.midi = (int) Double.parseDouble(msmNote.getAttributeValue("midi.pitch"));
         this.hashCode = this.makeHashCode();
     }
 
@@ -99,6 +99,21 @@ public class Pitch {
      */
     private int makeHashCode() {
         return Objects.hash(this.pitchName, this.accidental, this.octave);
+    }
+
+    /**
+     * make Pitch comparable
+     * @param otherPitch the object to be compared.
+     * @return
+     */
+    @Override
+    public int compareTo(Pitch otherPitch) {
+        if (this.midi < otherPitch.midi)
+            return -1;
+        if (this.midi > otherPitch.midi)
+            return 1;
+        else
+            return 0;
     }
 
     /**

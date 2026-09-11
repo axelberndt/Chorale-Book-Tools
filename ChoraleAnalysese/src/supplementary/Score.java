@@ -4,7 +4,7 @@ import meico.mpm.elements.maps.GenericMap;
 import meico.supplementary.KeyValue;
 import nu.xom.Element;
 
-import java.util.ArrayList;
+import java.util.TreeSet;
 
 /**
  * This class represents an MSM score, i.e. a list of note and rest elements.
@@ -72,8 +72,8 @@ public class Score extends GenericMap {
      * @param date
      * @return
      */
-    public ArrayList<Pitch> getPitchesAt(double date) {
-        ArrayList<Pitch> results = new ArrayList<>();
+    public TreeSet<Pitch> getPitchesAt(double date) {
+        TreeSet<Pitch> results = new TreeSet<>();
 
         // for each element until (and including) the specified date
         for (int i=0; i < this.elements.size(); ++i) {
@@ -85,7 +85,7 @@ public class Score extends GenericMap {
                 continue;
 
             double dateEnd = kv.getKey() + Double.parseDouble(kv.getValue().getAttributeValue("duration"));
-            if (dateEnd < date)         // if the note stops before the specified date
+            if (dateEnd <= date)         // if the note stops before or at the specified date
                 continue;
 
             results.add(new Pitch(kv.getValue()));

@@ -207,8 +207,15 @@ public class Main {
      * run an analysis of the distances between neighboring musical voices
      */
     private void voiceDistancesAnalysis() {
-        // TODO ...
+        for (Mei mei : this.meis2Msms.keySet()) {
+//            System.out.println("\nProcessing " + mei.getFile().getName());
+            VoiceDistances voiceDistancesOfThis = VoiceDistances.analyze(this.meis2Msms.get(mei).get(0));
+//            System.out.println(voiceDistancesOfThis.printStatistics());
+            this.voiceDistances.merge(voiceDistancesOfThis);
+        }
+
         System.out.println("\nVoice Distances");
+        System.out.println(this.voiceDistances.printStatistics());
     }
 
     /**
