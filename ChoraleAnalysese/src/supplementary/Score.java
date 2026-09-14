@@ -4,10 +4,12 @@ import meico.mpm.elements.maps.GenericMap;
 import meico.supplementary.KeyValue;
 import nu.xom.Element;
 
+import java.util.ArrayList;
 import java.util.TreeSet;
 
 /**
  * This class represents an MSM score, i.e. a list of note and rest elements.
+ * @author Axel Berndt
  */
 public class Score extends GenericMap {
     /**
@@ -89,6 +91,28 @@ public class Score extends GenericMap {
                 continue;
 
             results.add(new Pitch(kv.getValue()));
+        }
+
+        return results;
+    }
+
+    /**
+     * Returns the sequence of melodic intervals. This expects a monophonic voice!
+     * @param loopToFirstNote if true, the final note loops to the first note
+     * @return the series of intervals between successive notes, entry format is (MITI tick date of the 2nd note, PitchInterval between 1st and 2nd note)
+     */
+    public ArrayList<KeyValue<Double, PitchInterval>> getMelodicIntervalSequence(boolean loopToFirstNote) {
+        ArrayList<KeyValue<Double, PitchInterval>> results = new ArrayList<>();
+
+        ArrayList<KeyValue<Double, Element>> notes = this.getAllElementsOfType("note");
+
+        if (loopToFirstNote)                            // the final note loops to the first note
+            notes.add(notes.get(0));
+
+        for (int i=0; i < notes.size() - 1; ++i) {      // for each note and its successor
+            Pitch pitch1 = new Pitch(notes.get(i).getValue());
+            Pitch pitch2 = new Pitch(notes.get(i+1).getValue());
+            results.add(new KeyValue<>(notes.get(i + 1).getKey(), new PitchInterval(pitch1, pitch2)));
         }
 
         return results;

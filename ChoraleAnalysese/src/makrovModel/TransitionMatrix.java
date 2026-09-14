@@ -52,7 +52,7 @@ public class TransitionMatrix<T> extends HashMap<List<T>, HashMap<T, Double>> {
     }
 
     private HashMap<T, Double> put(List<T> sequenceOfPastEvents, T nextEvent) {
-        if ((this.order == 0) && ((sequenceOfPastEvents == null) || (sequenceOfPastEvents.size() == 0))) {
+        if ((this.order == 0) && ((sequenceOfPastEvents == null) || sequenceOfPastEvents.isEmpty())) {
             HashMap<T, Double> transitionProbabilities = this.get(null);
             Double prob = transitionProbabilities.get(nextEvent);
             if (prob == null)

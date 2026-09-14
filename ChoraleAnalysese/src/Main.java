@@ -7,6 +7,8 @@ import meterSignatures.MeterSignature;
 import meterSignatures.MeterSignatures;
 import nu.xom.*;
 import org.xml.sax.SAXException;
+import voiceAnalyses.MelodicIntervals;
+import voiceAnalyses.MelodicIntervalsAnalyses;
 import voiceAnalyses.PitchHistograms;
 import voiceAnalyses.VoiceDistances;
 
@@ -28,8 +30,7 @@ public class Main {
     private MeterSignatures meterSignatures = null;             // which meter signatures are present and for how many measures?
     private PitchHistograms pitchHistograms = null;             // compute the pitch histogram for each musical voice
     private VoiceDistances voiceDistances = null;               // compute the distances between neighboring voices, ie.e soprano-alto, alto-tenor, tenor-bass
-    private boolean frameIntervals = false;                     // compute the intervalls between soprano and bass part
-    private boolean melodicity = false;                         // compute melodic intervals for each voice
+    private MelodicIntervalsAnalyses melodicity = null;         // compute melodic intervals for each voice
     private boolean chords = false;                             // perform harmonic analysis
     private boolean chordSequences = false;                     // compute a Markov model of the chord sequences
     private boolean nonchordTones = false;                      // get a list and classification of the nonchord tones
@@ -66,12 +67,8 @@ public class Main {
                     main.voiceDistances = new VoiceDistances();
                     break;
 
-                case "-frame-intervals":
-                    main.frameIntervals = true;
-                    break;
-
                 case "-melodicity":
-                    main.melodicity = true;
+                    main.melodicity = new MelodicIntervalsAnalyses();
                     break;
 
                 case "-chords":
@@ -134,6 +131,13 @@ public class Main {
 
         if (this.voiceDistances != null)
             this.voiceDistancesAnalysis();
+
+        System.out.println("\n---------------------------------------------------------------------------");
+
+        if (this.melodicity != null)
+            this.melodicityAnalysis();
+
+        System.out.println("\n---------------------------------------------------------------------------");
 
         // TODO: more analyses ...
 
@@ -216,6 +220,19 @@ public class Main {
 
         System.out.println("\nVoice Distances");
         System.out.println(this.voiceDistances.printStatistics());
+    }
+
+    /**
+     * run an analysis of the melodic intervals in each musical voice
+     */
+    private void melodicityAnalysis() {
+        for (Mei mei : this.meis2Msms.keySet()) {
+            System.out.println("\nProcessing " + mei.getFile().getName());
+            this.melodicity.analyze(this.meis2Msms.get(mei).get(0));
+        }
+
+        System.out.println("\nMelodic Intervals");
+        System.out.println(this.melodicity);
     }
 
     /**
@@ -380,7 +397,6 @@ public class Main {
         System.out.println("[-meter-signatures]            get meter signatures");
         System.out.println("[-pitch-histograms]            get pitch histograms for each musical voice");
         System.out.println("[-voice-distances]             get distances between voices");
-        System.out.println("[-frame-intervals]             get frame intervals between soprano and bass");
         System.out.println("[-melodicity]                  get melodic intervals");
         System.out.println("[-chords]                      get harmonic analysis");
         System.out.println("[-chord-sequences]             get Markov analysis of chord sequences");

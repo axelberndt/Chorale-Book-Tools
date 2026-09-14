@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 /**
  * This class represents a pitch interval.
+ * @author Axel Berndt
  */
 public class PitchInterval implements Comparable<PitchInterval> {
     public static final HashMap<Integer, String> DIATONIC_INTERVAL_NAMES = new HashMap<>(){{
