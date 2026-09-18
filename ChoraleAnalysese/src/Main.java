@@ -1,3 +1,4 @@
+import harmonicAnalysis.Chords;
 import keySignatures.*;
 import meico.Meico;
 import meico.mei.Mei;
@@ -7,7 +8,6 @@ import meterSignatures.MeterSignature;
 import meterSignatures.MeterSignatures;
 import nu.xom.*;
 import org.xml.sax.SAXException;
-import voiceAnalyses.MelodicIntervals;
 import voiceAnalyses.MelodicIntervalsAnalyses;
 import voiceAnalyses.PitchHistograms;
 import voiceAnalyses.VoiceDistances;
@@ -31,7 +31,7 @@ public class Main {
     private PitchHistograms pitchHistograms = null;             // compute the pitch histogram for each musical voice
     private VoiceDistances voiceDistances = null;               // compute the distances between neighboring voices, ie.e soprano-alto, alto-tenor, tenor-bass
     private MelodicIntervalsAnalyses melodicity = null;         // compute melodic intervals for each voice
-    private boolean chords = false;                             // perform harmonic analysis
+    private Chords chords = null;                               // perform harmonic analysis
     private boolean chordSequences = false;                     // compute a Markov model of the chord sequences
     private boolean nonchordTones = false;                      // get a list and classification of the nonchord tones
 
@@ -72,7 +72,7 @@ public class Main {
                     break;
 
                 case "-chords":
-                    main.chords = true;
+                    main.chords = new Chords();
                     break;
 
                 case "chord-sequences":
@@ -136,6 +136,11 @@ public class Main {
 
         if (this.melodicity != null)
             this.melodicityAnalysis();
+
+        System.out.println("\n---------------------------------------------------------------------------");
+
+        if (this.chords != null)
+            this.chordAnalysis();
 
         System.out.println("\n---------------------------------------------------------------------------");
 
@@ -227,12 +232,25 @@ public class Main {
      */
     private void melodicityAnalysis() {
         for (Mei mei : this.meis2Msms.keySet()) {
-            System.out.println("\nProcessing " + mei.getFile().getName());
+//            System.out.println("\nProcessing " + mei.getFile().getName());
             this.melodicity.analyze(this.meis2Msms.get(mei).get(0));
         }
 
         System.out.println("\nMelodic Intervals");
         System.out.println(this.melodicity);
+    }
+
+    /**
+     * run an analysis of the chords in each movement
+     */
+    private void chordAnalysis() {
+        for (Mei mei : this.meis2Msms.keySet()) {
+//            System.out.println("\nProcessing " + mei.getFile().getName());
+            this.chords.analyze(this.meis2Msms.get(mei).get(0));
+        }
+
+        System.out.println("\nChord Analysis");
+        System.out.println(this.chords);
     }
 
     /**

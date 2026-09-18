@@ -9,6 +9,7 @@ import java.util.*;
 
 /**
  * This class analyzes a given MEI/MSM to find out which key signatures are present.
+ * The entry format is (KeySignature, List of MEI file names where the key signature is present).
  * @author Axel Berndt
  */
 public class KeySignatures extends HashMap<KeySignature, SortedSet<String>> {
