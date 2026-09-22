@@ -4,7 +4,7 @@ import meico.supplementary.KeyValue;
 import nu.xom.Element;
 import supplementary.Pitch;
 import supplementary.PitchInterval;
-import supplementary.Score;
+import msm.elements.maps.Score;
 
 import java.util.*;
 

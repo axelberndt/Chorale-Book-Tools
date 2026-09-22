@@ -1,8 +1,12 @@
-package supplementary;
+package msm.elements.maps;
 
 import meico.mpm.elements.maps.GenericMap;
 import meico.supplementary.KeyValue;
+import msm.MsmX;
+import msm.elements.maps.data.Note;
 import nu.xom.Element;
+import supplementary.Pitch;
+import supplementary.PitchInterval;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -17,7 +21,7 @@ public class Score extends GenericMap {
      * @throws Exception
      */
     protected Score() throws Exception {
-        super("score");
+        super(MsmX.SCORE);
     }
 
     /**
@@ -66,7 +70,7 @@ public class Score extends GenericMap {
      */
     protected void parseData(Element xml) throws Exception {
         super.parseData(xml);
-        this.setType("score");            // make sure this is really a "score"
+        this.setType(MsmX.SCORE);            // make sure this is really a "score"
     }
 
     /**
@@ -80,7 +84,7 @@ public class Score extends GenericMap {
         // for each element until (and including) the specified date
         for (int i=0; i < this.elements.size(); ++i) {
             KeyValue<Double, Element> kv = this.elements.get(i);
-            if (kv.getKey() > date)     // we stop searching at the specified date
+            if (kv.getKey() > date)     // we stop searching after the specified date
                 break;
 
             if (!kv.getValue().getLocalName().equals("note"))   // it must be a note
@@ -97,9 +101,36 @@ public class Score extends GenericMap {
     }
 
     /**
+     * get all notes that play at the specified date
+     * @param date
+     * @return
+     */
+    public ArrayList<Note> getNotesAt(double date) {
+        ArrayList<Note> results = new ArrayList<>();
+
+        // for each element until (and including) the specified date
+        for (int i=0; i < this.elements.size(); ++i) {
+            KeyValue<Double, Element> kv = this.elements.get(i);
+            if (kv.getKey() > date)     // we stop searching after the specified date
+                break;
+
+            if (!kv.getValue().getLocalName().equals("note"))   // it must be a note
+                continue;
+
+            double dateEnd = kv.getKey() + Double.parseDouble(kv.getValue().getAttributeValue("duration"));
+            if (dateEnd <= date)         // if the note stops before or at the specified date
+                continue;
+
+            results.add(Note.createNote(kv.getValue()));
+        }
+
+        return results;
+    }
+
+    /**
      * Returns the sequence of melodic intervals. This expects a monophonic voice!
      * @param loopToFirstNote if true, the final note loops to the first note
-     * @return the series of intervals between successive notes, entry format is (MITI tick date of the 2nd note, PitchInterval between 1st and 2nd note)
+     * @return the series of intervals between successive notes, entry format is (MIDI tick date of the 2nd note, PitchInterval between 1st and 2nd note)
      */
     public ArrayList<KeyValue<Double, PitchInterval>> getMelodicIntervalSequence(boolean loopToFirstNote) {
         ArrayList<KeyValue<Double, PitchInterval>> results = new ArrayList<>();

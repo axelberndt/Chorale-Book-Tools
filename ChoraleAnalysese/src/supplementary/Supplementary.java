@@ -1,5 +1,9 @@
 package supplementary;
 
+import meico.mpm.elements.Part;
+import meico.mpm.elements.maps.GenericMap;
+import msm.MsmX;
+import msm.elements.MsmRoot;
 import nu.xom.Element;
 
 import java.util.*;
@@ -31,5 +35,34 @@ public class Supplementary {
             out.addAll(depthFirstSearch(child, findThis, stopHere));
 
         return out;
+    }
+
+    /**
+     * all elements of the provided map
+     * @param toThis this map must be part of a full MSM document
+     */
+    public static void addMeiTstamps(GenericMap toThis) {
+        MsmX msmx = new MsmX(toThis.getXml().getDocument());
+        MsmRoot msmRoot = msmx.getMsmRoot();
+
+        GenericMap timeSignatureMap = msmRoot.getGlobal().getDated().getMap(MsmX.TIME_SIGNATURE_MAP);
+        if (timeSignatureMap == null) {
+            for (Part part : msmRoot.getAllParts()) {
+                timeSignatureMap = part.getDated().getMap(MsmX.TIME_SIGNATURE_MAP);
+                if (timeSignatureMap != null) {
+                    break;
+                }
+            }
+        }
+
+        int ppq = msmx.getPPQ();
+        double ppq4 = 4.0 * ppq;
+        double tsDate = 0.0;
+        double tsNumerator = 4.0;
+        int tsDenominator = 4;
+        double ticksPerBeat = ppq;
+        double tickLengthOfOneMeasure = ticksPerBeat * tsNumerator;
+
+        // TODO ...
     }
 }

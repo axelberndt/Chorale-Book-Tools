@@ -24,7 +24,7 @@ import java.util.List;
  * @author Axel Berndt
  */
 public class Main {
-    public static final String VERSION = "0.0.0";
+    public static final String VERSION = "0.0.1";
 
     private KeySignatures keySignatures = null;                 // which key signatures are present and for how many measures?
     private MeterSignatures meterSignatures = null;             // which meter signatures are present and for how many measures?
@@ -104,11 +104,11 @@ public class Main {
      */
     private void analyze(){
         // preprocessing
-        for (Mei mei : this.meis2Msms.keySet()) {
-            removeEndingsAndRepetitionmarks(mei);                               // the sequence of the chorale is encoded in <expan>; repetition marks and endings should not be present in the through-composed version, thus we remove them hereby
-            addInvisMeterSigBeforeFirstMeasure(mei);
-            this.meis2Msms.get(mei).forEach(msm -> this.uniteFragmentedTimeSignatures(msm));   // cleanup fragmented measures (e.g., at repetitions) by uniting them wherever they sum up to the time signature before that position
-        }
+//        for (Mei mei : this.meis2Msms.keySet()) {
+//            removeEndingsAndRepetitionmarks(mei);                               // the sequence of the chorale is encoded in <expan>; repetition marks and endings should not be present in the through-composed version, thus we remove them hereby
+//            addInvisMeterSigBeforeFirstMeasure(mei);
+//            this.meis2Msms.get(mei).forEach(msm -> this.uniteFragmentedTimeSignatures(msm));   // cleanup fragmented measures (e.g., at repetitions) by uniting them wherever they sum up to the time signature before that position
+//        }
 
         System.out.println("\n---------------------------------------------------------------------------");
 
@@ -119,6 +119,7 @@ public class Main {
 
         System.out.println("\n---------------------------------------------------------------------------");
 
+        // Activate the above preprocessing for this!
         if (this.meterSignatures != null)
             this.meterSignatureAnalysis();
 
@@ -144,9 +145,9 @@ public class Main {
 
         System.out.println("\n---------------------------------------------------------------------------");
 
-        // TODO: more analyses ...
+        System.out.println("All analyses done.");
 
-        System.out.println("\n---------------------------------------------------------------------------");
+        System.out.println("\n===========================================================================");
     }
 
     /**
@@ -246,7 +247,8 @@ public class Main {
     private void chordAnalysis() {
         for (Mei mei : this.meis2Msms.keySet()) {
 //            System.out.println("\nProcessing " + mei.getFile().getName());
-            this.chords.analyze(this.meis2Msms.get(mei).get(0));
+            this.chords.analyze(mei, this.meis2Msms.get(mei).get(0));
+//            this.meis2Msms.get(mei).get(0).writeMsm();
         }
 
         System.out.println("\nChord Analysis");

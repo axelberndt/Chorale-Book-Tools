@@ -1,5 +1,9 @@
 package supplementary;
 
+import msm.elements.maps.data.Note;
+import nu.xom.Attribute;
+import nu.xom.Element;
+
 import java.util.HashMap;
 
 /**
@@ -131,6 +135,15 @@ public class PitchInterval implements Comparable<PitchInterval> {
     }
 
     /**
+     * convenient constructor that computes the pitch interval by note1 - note2
+     * @param note1 typically the higher note
+     * @param note2 typically the lower note
+     */
+    public PitchInterval(Note note1, Note note2) {
+        this(note1.getPitch(), note2.getPitch());
+    }
+
+    /**
      * factory that converts a MEI compliant harmonic interval String
      * (<a href="https://music-encoding.org/guidelines/v5/data-types/data.INTERVAL.HARMONIC.html">...</a>)
      * to a PitchInterval
@@ -232,6 +245,17 @@ public class PitchInterval implements Comparable<PitchInterval> {
     @Override
     public String toString() {
         return "PitchInterval{semi=" + semitones + ", diat=" + diatonic + "}";
+    }
+
+    /**
+     * generate XML data from this object
+     * @return
+     */
+    public Element getXml() {
+        Element out = new Element("pitchInterval");
+        out.addAttribute(new Attribute("semitones", Integer.toString(semitones)));
+        out.addAttribute(new Attribute("diatonic", Integer.toString(diatonic)));
+        return out;
     }
 
     /**
