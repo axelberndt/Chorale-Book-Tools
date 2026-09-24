@@ -70,18 +70,20 @@ public class Chords extends HashMap<Chord, Integer> {
             for (Note note : stillSounding)
                 if (note.getEndDate() <= date)
                     toRemove.add(note);
-            for (Note note : toRemove)
-                stillSounding.remove(note);
+//            for (Note note : toRemove)
+//                stillSounding.remove(note);
+            stillSounding.removeAll(toRemove);
 
             // add new notes that start at this date
             stillSounding.addAll(notes.get(date));
 
             // create a chord from it and add it to the chordMap
-            Chord chord = new Chord(stillSounding);
+            Chord chord = new Chord(stillSounding, true);
             Element chordElement = chord.getXml();
             chordElement.addAttribute(new Attribute("date", date.toString()));  // add the date to it
             chordMap.addChord(date, chord);
         }
+        System.out.println(chordMap);
 
         //TODO ...
         // for each entry in the notes map

@@ -22,18 +22,30 @@ public class Chord extends TreeSet<PitchInterval> {
     /**
      * Constructs a chord from a list of pitch intervals.
      * @param pitchIntervals the pitch intervals that make up the chord
+     * @param ignoreOctave whether to ignore the octave of the pitch intervals when constructing the chord
      */
-    public Chord(PitchInterval...pitchIntervals) {
-        super(List.of(pitchIntervals));
+    public Chord(TreeSet<PitchInterval> pitchIntervals, boolean ignoreOctave) {
+        TreeSet<PitchInterval> pis = new TreeSet<>();
+        if (ignoreOctave) {
+            for (PitchInterval pi : pitchIntervals) {
+                pi = new PitchInterval(pi.semitones % 12, pi.diatonic % 7);
+                pis.add(pi);
+            }
+        } else {
+            pis.addAll(pitchIntervals);
+        }
+
+        super(pis);
         this.hashCode = this.computeHashCode();
     }
 
     /**
      * construct a chord from a list of notes
      * @param notes
+     * @param ignoreOctave whether to ignore the octave of the notes when constructing the chord
      * @return
      */
-    public Chord(List<Note> notes) {
+    public Chord(List<Note> notes, boolean ignoreOctave) {
         if ((notes == null) || notes.isEmpty())
             throw new IllegalArgumentException("List notes must not be null or empty!");
 
@@ -49,7 +61,10 @@ public class Chord extends TreeSet<PitchInterval> {
 
         // collect the pitch intervals including P1 for the lowest note
         for (Note n : notes) {
-            this.add(new PitchInterval(n, lowest));
+            PitchInterval pi = new PitchInterval(n, lowest);
+            if (ignoreOctave)
+                pi = new PitchInterval(pi.semitones % 12, pi.diatonic % 7);
+            this.add(pi);
             this.participantsList.add(n.getId());
         }
 
@@ -88,7 +103,7 @@ public class Chord extends TreeSet<PitchInterval> {
      * @return
      */
     public static Chord fromInth(String inth) {
-        ArrayList<PitchInterval> list = new ArrayList<>();
+        TreeSet<PitchInterval> list = new TreeSet<>();
         String[] parts = inth.trim().split(" ");    // there might be more intervals in the string, they are space separated
 
         for (String part : parts) {
@@ -97,7 +112,7 @@ public class Chord extends TreeSet<PitchInterval> {
                 list.add(pi);
         }
 
-        return new Chord(list.toArray(new PitchInterval[list.size()]));
+        return new Chord(list, false);
     }
 
     /**
@@ -135,8 +150,10 @@ public class Chord extends TreeSet<PitchInterval> {
      */
     public String toInthString() {
         String out = "";
-        for (PitchInterval pitchInterval : this)
-            out += " " + pitchInterval.getHarmonicInterval();
+        for (PitchInterval pitchInterval : this) {
+            String inth = pitchInterval.getHarmonicIntervalWithoutOctave();
+            out += " " + inth;
+        }
         return out.substring(1);
     }
 

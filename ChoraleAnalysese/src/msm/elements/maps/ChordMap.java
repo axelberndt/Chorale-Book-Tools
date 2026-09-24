@@ -93,4 +93,21 @@ public class ChordMap extends GenericMap {
             return null;
         return new Chord(e);
     }
+
+    /**
+     * generate String output
+     * @return
+     */
+    @Override
+    public String toString() {
+        String out = "<chordMap>: ";
+
+        for (KeyValue<Double, Element> kv : this.getAllElements()) {
+            Chord chord = new Chord(kv.getValue());
+            String inth = chord.toInthString();
+            out += "  " + kv.getKey() + ": \"" + inth + "\"\n";
+        }
+
+        return out;
+    }
 }

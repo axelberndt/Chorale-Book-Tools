@@ -168,7 +168,10 @@ public class PitchInterval implements Comparable<PitchInterval> {
      * @return MEI harmonic interval string or null if unknown
      */
     public String getHarmonicInterval() {
-        return HARMONIC_INTERVAL.get(this);
+        String inth = HARMONIC_INTERVAL.get(this);
+//        if (inth == null)     // possible fallback
+//            inth = this.semitones + ":" + this.diatonic;
+        return inth;
     }
 
     /**
