@@ -6,12 +6,11 @@ import meico.supplementary.KeyValue;
 import msm.MsmX;
 import nu.xom.Attribute;
 import nu.xom.Element;
+import supplementary.Supplementary;
 
-import java.util.TreeMap;
+import java.util.ArrayList;
 
 public class ChordMap extends GenericMap {
-    private final TreeMap<Double, Chord> chordSequence = new TreeMap<>();
-
     /**
      * constructor, generates an empty chordMap
      * @throws Exception
@@ -95,12 +94,29 @@ public class ChordMap extends GenericMap {
     }
 
     /**
+     * converts this map to a list of MEI harm elements
+     * @return the list of MEI harm elements, the format of the entries is (MIDI tick date, MEI harm element)
+     */
+    public ArrayList<KeyValue<Double, Element>> toHarmList() {
+        Supplementary.addMeiTstamps(this);              // all elements need tstamps
+
+        ArrayList<KeyValue<Double, Element>> harmList = new ArrayList<>();
+        for (KeyValue<Double, Element> kv : this.getAllElements()) {
+            Chord chord = new Chord(kv.getValue());             // from a Chord instance ...
+            Element harm = chord.toHarm();                      // ... we more easily get the MEI harm element
+            harm.addAttribute(new Attribute("tstamp", kv.getValue().getAttributeValue("tstamp")));  // we add the tstamp
+            harmList.add(new KeyValue<>(kv.getKey(), harm));    // finally, add the harm to the list
+        }
+        return harmList;
+    }
+
+    /**
      * generate String output
      * @return
      */
     @Override
     public String toString() {
-        String out = "<chordMap>: ";
+        String out = "<chordMap>\n";
 
         for (KeyValue<Double, Element> kv : this.getAllElements()) {
             Chord chord = new Chord(kv.getValue());

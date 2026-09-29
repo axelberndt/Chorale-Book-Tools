@@ -11,6 +11,7 @@ import msm.elements.maps.data.Chord;
 import msm.elements.maps.data.Note;
 import nu.xom.Attribute;
 import nu.xom.Element;
+import supplementary.Supplementary;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,11 +33,12 @@ public class Chords extends HashMap<Chord, Integer> {
      * Perform an analysis of the given MSM and aggregate it with analysis done so far.
      * This method expects a global timeSignatureMap. Otherwise, if there are local
      * timeSignatureMaps, it will take the first it finds.
+     * Attention: this method alters the MEI and MSM!
      * @param mei the MEI needs to be provided, so we can add annotations to it
      * @param msm the MSM is the basis for the analysis
      * @return
      */
-    public Chords analyze(Mei mei, Msm msm) {
+    public static Chords analyze(Mei mei, Msm msm) {
         // safety checks
         if (msm == null)
             return null;
@@ -48,6 +50,7 @@ public class Chords extends HashMap<Chord, Integer> {
             return null;
 
         // collect all notes sorted by date
+        Chords out = new Chords();
         TreeMap<Double, ArrayList<Note>> notes = new TreeMap<>();
         for (Part part : msmx.getMsmRoot().getAllParts()) {
             for (KeyValue<Double, Element> kv : part.getDated().getMap(MsmX.SCORE).getAllElementsOfType("note")) {
@@ -70,8 +73,6 @@ public class Chords extends HashMap<Chord, Integer> {
             for (Note note : stillSounding)
                 if (note.getEndDate() <= date)
                     toRemove.add(note);
-//            for (Note note : toRemove)
-//                stillSounding.remove(note);
             stillSounding.removeAll(toRemove);
 
             // add new notes that start at this date
@@ -82,8 +83,12 @@ public class Chords extends HashMap<Chord, Integer> {
             Element chordElement = chord.getXml();
             chordElement.addAttribute(new Attribute("date", date.toString()));  // add the date to it
             chordMap.addChord(date, chord);
+            out.add(chord);                     // add the chord to the output statistics
         }
-        System.out.println(chordMap);
+
+        // annotate the MEI with harm elements, so the analysis is also readable
+        ArrayList<KeyValue<Double, Element>> harms = chordMap.toHarmList();   // this produces us a list of MEI harm elements, already with the tstamp attribute; the key in the key-value pair is the MIDI tick date
+
 
         //TODO ...
         // for each entry in the notes map
@@ -94,7 +99,18 @@ public class Chords extends HashMap<Chord, Integer> {
         //     if it is added tot the HashMap, add Chord.toChordDef() to the MEI chordTable
         //       can I add a corresponding <harm> to the MEI as a (proof-)readable visual annotation (with plist, tstamp etc.)?
 
-        return null;
+        return out;
+    }
+
+    /**
+     * add a Chord to this
+     * @param chord
+     */
+    private void add(Chord chord) {
+        if (this.containsKey(chord))
+            this.put(chord, this.get(chord) + 1);
+        else
+            this.put(chord, 1);
     }
 
     /**
@@ -106,4 +122,15 @@ public class Chords extends HashMap<Chord, Integer> {
             this.merge(key, other.get(key), Integer::sum);
     }
 
+    /**
+     * print the analysis results, formatted as a list of inth String and count
+     * @return
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Chord key : this.keySet())
+            sb.append(key.toInthString()).append("\t").append(this.get(key)).append("\n");
+        return sb.toString();
+    }
 }

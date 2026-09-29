@@ -247,7 +247,7 @@ public class Main {
     private void chordAnalysis() {
         for (Mei mei : this.meis2Msms.keySet()) {
 //            System.out.println("\nProcessing " + mei.getFile().getName());
-            this.chords.analyze(mei, this.meis2Msms.get(mei).get(0));
+            this.chords.merge(Chords.analyze(mei, this.meis2Msms.get(mei).get(0)));
 //            this.meis2Msms.get(mei).get(0).writeMsm();
         }
 
@@ -400,6 +400,7 @@ public class Main {
             return false;
         }
 
+        mei.addIds();                                                       // add IDs where they are missing
         mei.resolveCopyofsAndSameas();                                      // this is also done during MEI-to-MSM conversion, execute this line if the MEI data should be altered before further analyses
 //        mei.resolveExpansions();                                            // execute this line if the MEI data should be altered before further analyses
         mei.layersToStaffs();                                               // separate individual voices from polyphonic staffs

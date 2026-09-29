@@ -158,6 +158,18 @@ public class Chord extends TreeSet<PitchInterval> {
     }
 
     /**
+     * create an MEI harm element from this Chord
+     * @return
+     */
+    public Element toHarm() {
+        Element harm = new Element("harm");
+        harm.addAttribute(new Attribute("inth", this.toInthString()));
+        harm.addAttribute(new Attribute("plist", this.getPlist()));
+        Helper.addUUID(harm);
+        return harm;
+    }
+
+    /**
      * generate an MEI chordDef representation of this chord
      * @return
      */
@@ -215,15 +227,23 @@ public class Chord extends TreeSet<PitchInterval> {
         out.addAttribute(new Attribute("date", "0.0"));  // needs being set by the user
         Helper.addUUID(out);                                    // generate ID attribute from the inth String
 
-        String plist = "";
-        for (String participant : this.participantsList)
-            plist += " #" + participant;
-        out.addAttribute(new Attribute("plist", plist.substring(1)));   // substring(1) removes the leading space
+        out.addAttribute(new Attribute("plist", this.getPlist()));   // substring(1) removes the leading space
 
         // add the pitch intervals that define the chord
         for (PitchInterval pitchInterval : this)
             out.appendChild(pitchInterval.getXml());
 
         return out;
+    }
+
+    /**
+     * print the list of IDs of participant notes in this chord
+     * @return
+     */
+    public String getPlist() {
+        String plist = "";
+        for (String participant : this.participantsList)
+            plist += " #" + participant;
+        return plist.substring(1);
     }
 }
