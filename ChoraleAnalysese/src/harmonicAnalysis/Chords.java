@@ -2,18 +2,23 @@ package harmonicAnalysis;
 
 import meico.mei.Mei;
 import meico.mpm.elements.Part;
+import meico.mpm.elements.maps.GenericMap;
 import meico.msm.Msm;
 import meico.supplementary.KeyValue;
 import msm.MsmX;
 import msm.elements.MsmRoot;
 import msm.elements.maps.ChordMap;
+import msm.elements.maps.Score;
 import msm.elements.maps.data.Chord;
 import msm.elements.maps.data.Note;
 import nu.xom.Attribute;
 import nu.xom.Element;
+import nu.xom.Node;
+import nu.xom.Nodes;
 import supplementary.Supplementary;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.TreeMap;
 
@@ -51,9 +56,12 @@ public class Chords extends HashMap<Chord, Integer> {
 
         // collect all notes sorted by date
         Chords out = new Chords();
+        ArrayList<GenericMap> scores = new ArrayList<>();
         TreeMap<Double, ArrayList<Note>> notes = new TreeMap<>();
         for (Part part : msmx.getMsmRoot().getAllParts()) {
-            for (KeyValue<Double, Element> kv : part.getDated().getMap(MsmX.SCORE).getAllElementsOfType("note")) {
+            GenericMap score = part.getDated().getMap(MsmX.SCORE);
+            scores.add(score);
+            for (KeyValue<Double, Element> kv : score.getAllElementsOfType("note")) {
                 Note note = Note.createNote(kv.getValue()); // make a Note instance of the Element
                 if (notes.containsKey(kv.getKey())) {
                     notes.get(kv.getKey()).add(note);
@@ -86,9 +94,42 @@ public class Chords extends HashMap<Chord, Integer> {
             out.add(chord);                     // add the chord to the output statistics
         }
 
-        // annotate the MEI with harm elements, so the analysis is also readable
-        ArrayList<KeyValue<Double, Element>> harms = chordMap.toHarmList();   // this produces us a list of MEI harm elements, already with the tstamp attribute; the key in the key-value pair is the MIDI tick date
+        // find the highest staff number, i.e. the lowest staff, to place the harm elements
+        Integer printInthAtStaffN = null;
+        for (Node sd : mei.getMusic().query("descendant::*[local-name()='staffDef']")) {
+            Element staffDef = (Element) sd;
+            Integer sdn = Integer.parseInt(staffDef.getAttributeValue("n"));
+            if (printInthAtStaffN == null || sdn > printInthAtStaffN)
+                printInthAtStaffN = sdn;
+        }
 
+        // annotate the MEI with harm elements, so the analysis is also readable
+        ArrayList<KeyValue<Double, Element>> harms = chordMap.toHarmList(String.valueOf(printInthAtStaffN));   // this produces us a list of MEI harm elements, already with the tstamp attribute; the key in the key-value pair is the MIDI tick date
+
+        // now, we need to insert them in the MEI in the correct measure
+        Nodes measures = mei.getMusic().query("descendant::*[local-name()='measure']");
+        for (KeyValue<Double, Element> kv : harms) {                        // for each harm
+            // To find the measure element in MEI, we need to identify the latest chord note, as this determines the position of the harm. Then we find that note in the MEI and from there the measure element.
+            Element harm = kv.getValue();
+            String[] participantIds = harm.getAttributeValue("plist").replace("#", "").split(" ");  // extract the IDs from the harm's plist attribute
+            Element latestMsmNote = Supplementary.getLatest(scores, Arrays.asList(participantIds));    // find out which participant is the latest
+            if (latestMsmNote == null)
+                continue;
+
+            // retrieve the measure element in MEI
+            String id = latestMsmNote.getAttributeValue("id", "http://www.w3.org/XML/1998/namespace");
+            Element measure = null;
+            for (Node m : measures) {
+                if (m.query("descendant::*[local-name()='note' and @xml:id='" + id + "']").size() > 0) {
+                    measure = (Element) m;
+                    break;
+                }
+            }
+            if (measure == null)
+                continue;
+
+            measure.appendChild(harm);      // add harm to measure
+        }
 
         //TODO ...
         // for each entry in the notes map

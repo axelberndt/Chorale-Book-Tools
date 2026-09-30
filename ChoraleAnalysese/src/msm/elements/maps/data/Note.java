@@ -10,7 +10,7 @@ import supplementary.Pitch;
  * This class represents an MSM note element.
  * @author Axel Berndt
  */
-public class Note extends AbstractXmlSubtree {
+public class Note extends AbstractXmlSubtree implements Comparable<Note> {
     /**
      * default constructor, generates a middle C
      * @throws Exception
@@ -179,5 +179,15 @@ public class Note extends AbstractXmlSubtree {
      */
     public String getId() {
         return this.getXml().getAttributeValue("id", "http://www.w3.org/XML/1998/namespace");
+    }
+
+    /**
+     * compate this with another note
+     * @param other the note to be compared.
+     * @return
+     */
+    @Override
+    public int compareTo(Note other) {
+        return Double.compare(this.getMidiPitch(), other.getMidiPitch());
     }
 }

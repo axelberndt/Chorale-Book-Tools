@@ -1,5 +1,7 @@
 package msm.elements.maps;
 
+import meico.mpm.elements.Part;
+import msm.elements.MsmRoot;
 import msm.elements.maps.data.Chord;
 import meico.mpm.elements.maps.GenericMap;
 import meico.supplementary.KeyValue;
@@ -95,18 +97,28 @@ public class ChordMap extends GenericMap {
 
     /**
      * converts this map to a list of MEI harm elements
+     * @param printInthAtStaffN the MEI staff number to print the harm elements at or null, if not desired
      * @return the list of MEI harm elements, the format of the entries is (MIDI tick date, MEI harm element)
      */
-    public ArrayList<KeyValue<Double, Element>> toHarmList() {
+    public ArrayList<KeyValue<Double, Element>> toHarmList(String printInthAtStaffN) {
         Supplementary.addMeiTstamps(this);              // all elements need tstamps
 
         ArrayList<KeyValue<Double, Element>> harmList = new ArrayList<>();
         for (KeyValue<Double, Element> kv : this.getAllElements()) {
-            Chord chord = new Chord(kv.getValue());             // from a Chord instance ...
-            Element harm = chord.toHarm();                      // ... we more easily get the MEI harm element
+            Chord chord = new Chord(kv.getValue());                         // from a Chord instance ...
+            Element harm = chord.toHarm(printInthAtStaffN != null); // ... we more easily get the MEI harm element
             harm.addAttribute(new Attribute("tstamp", kv.getValue().getAttributeValue("tstamp")));  // we add the tstamp
-            harmList.add(new KeyValue<>(kv.getKey(), harm));    // finally, add the harm to the list
+            harmList.add(new KeyValue<>(kv.getKey(), harm));                // finally, add the harm to the list
         }
+
+        // if we printInth is true and we found the highest staff number, i.w. the lowest staff, we now add a staff attribute to harm, so it gets printed by Verovio
+        if (printInthAtStaffN != null) {
+            for (KeyValue<Double, Element> kv : harmList) {
+                kv.getValue().addAttribute(new Attribute("staff", printInthAtStaffN));
+            }
+        }
+
+
         return harmList;
     }
 

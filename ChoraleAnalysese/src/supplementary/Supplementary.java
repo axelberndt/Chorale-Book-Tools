@@ -62,7 +62,7 @@ public class Supplementary {
         double ppq4 = 4.0 * ppq;
         int timeSignIndex = -1;
         double tsDate = 0.0;
-        double tsNumerator = 4.0;
+        double tsNumerator = Double.MAX_VALUE;
         int tsDenominator = 4;
         double ticksPerBeat = ppq;
         double tickLengthOfOneMeasure = ticksPerBeat * tsNumerator;
@@ -96,13 +96,30 @@ public class Supplementary {
     }
 
     /**
-     * find the latest element from the provided IDs in the MSM document
-     * @param msmx
+     * find the latest element from the provided IDs in the MSM/MPM maps
+     * @param maps
      * @param ids
-     * @return
+     * @return one of the latest elements, if there are more at the same date, or null
      */
-    public Element getLatest(MsmX msmx, ArrayList<String> ids) {
-        // TODO ...
-        return null;
+    public static Element getLatest(List<GenericMap> maps, List<String> ids) {
+        KeyValue<Double, Element> latest = null;
+        ArrayList<String> remainingIds = new ArrayList<>(ids);
+
+        for (GenericMap map : maps) {
+            ArrayList<String> checkedIds = new ArrayList<>();
+            for (String id : remainingIds) {
+                int index = map.getElementIndexByID(id);
+                if (index == -1)
+                    continue;
+
+                checkedIds.add(id);
+
+                if (latest == null || latest.getKey() < map.getAllElements().get(index).getKey())
+                    latest = map.getAllElements().get(index);
+            }
+            remainingIds.removeAll(checkedIds);
+        }
+
+        return (latest == null) ? null : latest.getValue();
     }
 }

@@ -71,7 +71,7 @@ public class Main {
                     main.melodicity = new MelodicIntervalsAnalyses();
                     break;
 
-                case "-chords":
+                case "-chord-analysis":
                     main.chords = new Chords();
                     break;
 
@@ -247,8 +247,11 @@ public class Main {
     private void chordAnalysis() {
         for (Mei mei : this.meis2Msms.keySet()) {
 //            System.out.println("\nProcessing " + mei.getFile().getName());
-            this.chords.merge(Chords.analyze(mei, this.meis2Msms.get(mei).get(0)));
-//            this.meis2Msms.get(mei).get(0).writeMsm();
+            Mei meiClone = new Mei(mei.getDocument().copy());
+            this.chords.merge(Chords.analyze(meiClone, this.meis2Msms.get(mei).get(0)));
+            String outputFilePath = mei.getFile().getParent() + File.separator + "chord-analysis" + File.separator + mei.getFile().getName();
+            meiClone.writeMei(outputFilePath);
+//            this.meis2Msms.get(mei).get(0).writeMsm(outputFilePath.replace(".mei", ".msm"));
         }
 
         System.out.println("\nChord Analysis");
@@ -419,7 +422,8 @@ public class Main {
         System.out.println("[-pitch-histograms]            get pitch histograms for each musical voice");
         System.out.println("[-voice-distances]             get distances between voices");
         System.out.println("[-melodicity]                  get melodic intervals");
-        System.out.println("[-chords]                      get harmonic analysis");
+        System.out.println("[-chord-analysis]              get harmonic analysis and output an annotated MEI");
+        System.out.println("[-chord-statistics]            get harmonic statistics (requires annotated MEI)");
         System.out.println("[-chord-sequences]             get Markov analysis of chord sequences");
         System.out.println("[-nonchord-tones]              get list and classification of nonchord tones");
         System.out.println("\nThe final argument should always be a path to a valid mei file (e.g., \"C:\\myMeiCollection\\test.mei\"); always in quotes! This is the only mandatory argument if you want to process something.");

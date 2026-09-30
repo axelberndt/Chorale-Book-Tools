@@ -52,15 +52,17 @@ public class Chord extends TreeSet<PitchInterval> {
         super();
 
         // find lowest note, because all other pitch intervals are relative to the lowest note
-        Note lowest = notes.get(0);
-        for (int i=0; i < notes.size(); ++i) {
-            Note n = notes.get(i);
-            if (n.getPitch().compareTo(lowest.getPitch()) < 0)
-                lowest = n;
-        }
+        TreeSet<Note> notesSorted = new TreeSet<>(notes);
+        Note lowest = notesSorted.first();
+//        Note lowest = notes.get(0);
+//        for (int i=0; i < notes.size(); ++i) {
+//            Note n = notes.get(i);
+//            if (n.getPitch().compareTo(lowest.getPitch()) < 0)
+//                lowest = n;
+//        }
 
         // collect the pitch intervals including P1 for the lowest note
-        for (Note n : notes) {
+        for (Note n : notesSorted) {
             PitchInterval pi = new PitchInterval(n, lowest);
             if (ignoreOctave)
                 pi = new PitchInterval(pi.semitones % 12, pi.diatonic % 7);
@@ -161,11 +163,27 @@ public class Chord extends TreeSet<PitchInterval> {
      * create an MEI harm element from this Chord
      * @return
      */
-    public Element toHarm() {
-        Element harm = new Element("harm");
-        harm.addAttribute(new Attribute("inth", this.toInthString()));
+    public Element toHarm(boolean printInth) {
+        Element harm = new Element("harm", "http://www.music-encoding.org/ns/mei");
+        String inth = this.toInthString();
+        harm.addAttribute(new Attribute("inth", inth));
         harm.addAttribute(new Attribute("plist", this.getPlist()));
         Helper.addUUID(harm);
+
+        if (printInth) {
+            Element fb = new Element("fb", "http://www.music-encoding.org/ns/mei");
+            Helper.addUUID(fb);
+            harm.appendChild(fb);
+
+            String[] inthSplit = inth.split(" ");
+            for (int i=inthSplit.length-1; i >= 0; --i) {
+                Element f = new Element("f", "http://www.music-encoding.org/ns/mei");
+                Helper.addUUID(f);
+                f.appendChild(inthSplit[i]);
+                fb.appendChild(f);
+            }
+        }
+
         return harm;
     }
 
