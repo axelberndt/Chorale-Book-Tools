@@ -8,7 +8,6 @@ import meico.supplementary.KeyValue;
 import msm.MsmX;
 import msm.elements.MsmRoot;
 import msm.elements.maps.ChordMap;
-import msm.elements.maps.Score;
 import msm.elements.maps.data.Chord;
 import msm.elements.maps.data.Note;
 import nu.xom.Attribute;
@@ -24,9 +23,10 @@ import java.util.TreeMap;
 
 /**
  * This class represents a collection of chords and how often they occur.
+ * The counter is a double type, so chord on unaccentuated times can be counted with a diminished weight.
  * @author Axel Berndt
  */
-public class Chords extends HashMap<Chord, Integer> {
+public class Chords extends HashMap<Chord, Double> {
     /**
      * constructor
      */
@@ -41,13 +41,15 @@ public class Chords extends HashMap<Chord, Integer> {
      * Attention: this method alters the MEI and MSM!
      * @param mei the MEI needs to be provided, so we can add annotations to it
      * @param msm the MSM is the basis for the analysis
+     * @param weightOfUnaccentuatedChords the weight of unaccentuated chords
      * @return
      */
-    public static Chords analyze(Mei mei, Msm msm) {
+    public static Chords analyze(Mei mei, Msm msm, double weightOfUnaccentuatedChords) {
         // safety checks
         if (msm == null)
             return null;
 
+        // prepare MSM data
         MsmX msmx = new MsmX(msm.getDocument());    // create an extended Msm (MsmX) from the Msm object
         MsmRoot msmRoot = msmx.getMsmRoot();
         ChordMap chordMap = ChordMap.createChordMap(msmRoot.getGlobal().getDated().addMap(MsmX.CHORD_MAP).getXml());
@@ -90,16 +92,21 @@ public class Chords extends HashMap<Chord, Integer> {
             Chord chord = new Chord(stillSounding, true);
             Element chordElement = chord.getXml();
             chordElement.addAttribute(new Attribute("date", date.toString()));  // add the date to it
-            chordMap.addChord(date, chord);
-            out.add(chord);                     // add the chord to the output statistics
+            chordMap.addElement(chordElement);  // chordMap.addChord(date, chord);
         }
 
         // find the highest staff number, i.e. the lowest staff, to place the harm elements
         Integer printInthAtStaffN = null;
         for (Node sd : mei.getMusic().query("descendant::*[local-name()='staffDef']")) {
             Element staffDef = (Element) sd;
-            Integer sdn = Integer.parseInt(staffDef.getAttributeValue("n"));
-            if (printInthAtStaffN == null || sdn > printInthAtStaffN)
+            int sdn;
+            try {
+                sdn = Integer.parseInt(staffDef.getAttributeValue("n"));
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                continue;
+            }
+            if ((printInthAtStaffN == null) || (sdn > printInthAtStaffN))
                 printInthAtStaffN = sdn;
         }
 
@@ -129,16 +136,13 @@ public class Chords extends HashMap<Chord, Integer> {
                 continue;
 
             measure.appendChild(harm);      // add harm to measure
-        }
 
-        //TODO ...
-        // for each entry in the notes map
-        //   compute the chord of all notes that sound at the respective date
-        //   if the chord is already in the HashMap? increase its counter
-        //   else if the chord is already in the exclusion map, ignore it
-        //   else ask where it should be added
-        //     if it is added tot the HashMap, add Chord.toChordDef() to the MEI chordTable
-        //       can I add a corresponding <harm> to the MEI as a (proof-)readable visual annotation (with plist, tstamp etc.)?
+            // based on attribute tstamp, find out whether the harm is on-beat (accentuated) or off-beat (unaccentuated) to determine its weighting in the statistics
+            Double tstamp = Double.parseDouble(harm.getAttributeValue("tstamp"));
+            double weight = ((tstamp % 1) == 0) ? 1.0 : weightOfUnaccentuatedChords;
+
+            out.add(Chord.fromInth(harm.getAttributeValue("inth")), weight);                     // add the chord to the output statistics
+        }
 
         return out;
     }
@@ -146,12 +150,13 @@ public class Chords extends HashMap<Chord, Integer> {
     /**
      * add a Chord to this
      * @param chord
+     * @param weight
      */
-    private void add(Chord chord) {
+    private void add(Chord chord, double weight) {
         if (this.containsKey(chord))
-            this.put(chord, this.get(chord) + 1);
+            this.put(chord, this.get(chord) + weight);
         else
-            this.put(chord, 1);
+            this.put(chord, weight);
     }
 
     /**
@@ -160,7 +165,7 @@ public class Chords extends HashMap<Chord, Integer> {
      */
     public void merge(Chords other) {
         for (Chord key : other.keySet())
-            this.merge(key, other.get(key), Integer::sum);
+            this.merge(key, other.get(key), Double::sum);
     }
 
     /**

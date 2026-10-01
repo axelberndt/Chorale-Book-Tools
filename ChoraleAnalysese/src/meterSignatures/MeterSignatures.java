@@ -111,9 +111,15 @@ public class MeterSignatures extends HashMap<MeterSignature, Integer> {
         TreeSet<String> stopHere = new TreeSet<>(List.of("section", "meterSig"));                             // we do not check for meter signatures in the musical text, only at the beginning in the initial scoreDef
         List<Element> candidates = Supplementary.depthFirstSearch(mdivs.getFirst(), findThis, stopHere);      // we check only the first mdiv, others are only verses with variants
         for (Element candidate : candidates) {
+            Attribute resp = candidate.getAttribute("resp");
+            if ((resp != null) && resp.getValue().equals("generated dummy")) {   // this was generated during import for better processability and must be ignored here
+                System.out.println("Ignoring generated dummy meter signature");
+                continue;
+            }
             MeterSignature meterSignature = MeterSignature.fromMei(candidate);
-            if (meterSignature != null)
+            if (meterSignature != null) {
                 return meterSignature;
+            }
         }
 
         return null;

@@ -1,7 +1,5 @@
 package msm.elements.maps;
 
-import meico.mpm.elements.Part;
-import msm.elements.MsmRoot;
 import msm.elements.maps.data.Chord;
 import meico.mpm.elements.maps.GenericMap;
 import meico.supplementary.KeyValue;
@@ -12,6 +10,10 @@ import supplementary.Supplementary;
 
 import java.util.ArrayList;
 
+/**
+ * This class represents an MSM chordMap.
+ * @author Axel Berndt
+ */
 public class ChordMap extends GenericMap {
     /**
      * constructor, generates an empty chordMap

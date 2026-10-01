@@ -177,8 +177,8 @@ public class Main {
         int piecesWithNoMeterSig = 0;
         for (Mei mei : this.meis2Msms.keySet()) {
 //            System.out.println("Processing " + mei.getFile().getName());
-            MeterSignature meterSignature = MeterSignatures.hasMeterSignature(mei);
             MeterSignatures meterSignaturesOfThis = new MeterSignatures();
+            MeterSignature meterSignature = MeterSignatures.hasMeterSignature(mei);
             if (meterSignature == null) {                                       // the music has no defined meter signature, so we add a default one
                 ++piecesWithNoMeterSig;
             } else {                                                            // otherwise we have to do some work, though, we check only the first mdiv/MSM, others are only verses with variants
@@ -248,7 +248,7 @@ public class Main {
         for (Mei mei : this.meis2Msms.keySet()) {
 //            System.out.println("\nProcessing " + mei.getFile().getName());
             Mei meiClone = new Mei(mei.getDocument().copy());
-            this.chords.merge(Chords.analyze(meiClone, this.meis2Msms.get(mei).get(0)));
+            this.chords.merge(Chords.analyze(meiClone, this.meis2Msms.get(mei).get(0), 0.5));
             String outputFilePath = mei.getFile().getParent() + File.separator + "chord-analysis" + File.separator + mei.getFile().getName();
             meiClone.writeMei(outputFilePath);
 //            this.meis2Msms.get(mei).get(0).writeMsm(outputFilePath.replace(".mei", ".msm"));
@@ -364,7 +364,30 @@ public class Main {
         }
     }
 
+    /**
+     * if the MEI has no meter signature, the placement of harmonic annotations would fail, so we add an invisible dummy meter signature
+     */
+    private void addDummyMeterSig(Mei mei) {
+        if (MeterSignatures.hasMeterSignature(mei) != null)
+            return;
 
+        Element scoreDef = (Element) mei.getMusic().query("descendant::*[local-name()='scoreDef']").get(0);
+        if (scoreDef == null)   // there is a more fundamental problem, if no scoreDef element exists
+            return;
+
+        Element meterSig = scoreDef.getFirstChildElement("meterSig", "http://www.music-encoding.org/ns/mei");
+        if (meterSig == null) {
+            meterSig = new Element("meterSig", "http://www.music-encoding.org/ns/mei");
+            meterSig.addAttribute(new Attribute("count", "1"));
+            meterSig.addAttribute(new Attribute("unit", "4"));
+            meterSig.addAttribute(new Attribute("visible", "false"));
+            meterSig.addAttribute(new Attribute("label", "generated dummy"));
+            meterSig.addAttribute(new Attribute("resp", "added for processability"));
+            scoreDef.insertChild(meterSig, 0);
+        }
+
+        System.out.println("Added dummy <meterSig> to \"" + mei.getFile().getName() + "\" for processability. It will affect the meter signature analysis!");
+    }
 
     /**
      * load all MEI files from the folder
@@ -403,6 +426,7 @@ public class Main {
             return false;
         }
 
+//        addDummyMeterSig(mei);    // activate this to get proper MEI annotations in MEIs without meterSig; this will affect meter signature analysis!!!
         mei.addIds();                                                       // add IDs where they are missing
         mei.resolveCopyofsAndSameas();                                      // this is also done during MEI-to-MSM conversion, execute this line if the MEI data should be altered before further analyses
 //        mei.resolveExpansions();                                            // execute this line if the MEI data should be altered before further analyses
@@ -422,8 +446,7 @@ public class Main {
         System.out.println("[-pitch-histograms]            get pitch histograms for each musical voice");
         System.out.println("[-voice-distances]             get distances between voices");
         System.out.println("[-melodicity]                  get melodic intervals");
-        System.out.println("[-chord-analysis]              get harmonic analysis and output an annotated MEI");
-        System.out.println("[-chord-statistics]            get harmonic statistics (requires annotated MEI)");
+        System.out.println("[-chord-analysis]              get chord statistics, and output an annotated MEI with harmonic analysis");
         System.out.println("[-chord-sequences]             get Markov analysis of chord sequences");
         System.out.println("[-nonchord-tones]              get list and classification of nonchord tones");
         System.out.println("\nThe final argument should always be a path to a valid mei file (e.g., \"C:\\myMeiCollection\\test.mei\"); always in quotes! This is the only mandatory argument if you want to process something.");
