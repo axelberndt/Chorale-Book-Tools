@@ -43,7 +43,6 @@ public class Chord extends TreeSet<PitchInterval> {
      * construct a chord from a list of notes
      * @param notes
      * @param ignoreOctave whether to ignore the octave of the notes when constructing the chord
-     * @return
      */
     public Chord(List<Note> notes, boolean ignoreOctave) {
         super();
@@ -76,7 +75,6 @@ public class Chord extends TreeSet<PitchInterval> {
     /**
      * constructor converts an MSM chord element to a Chord
      * @param xml
-     * @return
      */
     public Chord(Element xml) {
         if ((xml == null) || !xml.getLocalName().equals("chord"))
