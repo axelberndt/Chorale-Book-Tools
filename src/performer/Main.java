@@ -1,4 +1,4 @@
-package choralePerformer;
+package performer;
 
 import meico.Meico;
 import meico.mei.Helper;
@@ -60,7 +60,7 @@ public class Main {
 
                 case "-s":
                 case "--swing":
-                    Performer.SWING = true;
+                    performer.Performer.SWING = true;
                     break;
 
                 case "-t":

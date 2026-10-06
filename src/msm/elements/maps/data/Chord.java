@@ -25,17 +25,17 @@ public class Chord extends TreeSet<PitchInterval> {
      * @param ignoreOctave whether to ignore the octave of the pitch intervals when constructing the chord
      */
     public Chord(TreeSet<PitchInterval> pitchIntervals, boolean ignoreOctave) {
-        TreeSet<PitchInterval> pis = new TreeSet<>();
+        super();
+
         if (ignoreOctave) {
             for (PitchInterval pi : pitchIntervals) {
                 pi = new PitchInterval(pi.semitones % 12, pi.diatonic % 7);
-                pis.add(pi);
+                this.add(pi);
             }
         } else {
-            pis.addAll(pitchIntervals);
+            this.addAll(pitchIntervals);
         }
 
-        super(pis);
         this.hashCode = this.computeHashCode();
     }
 
@@ -46,10 +46,10 @@ public class Chord extends TreeSet<PitchInterval> {
      * @return
      */
     public Chord(List<Note> notes, boolean ignoreOctave) {
+        super();
+
         if ((notes == null) || notes.isEmpty())
             throw new IllegalArgumentException("List notes must not be null or empty!");
-
-        super();
 
         // find lowest note, because all other pitch intervals are relative to the lowest note
         TreeSet<Note> notesSorted = new TreeSet<>(notes);

@@ -11,7 +11,7 @@ import java.util.HashMap;
  * @author Axel Berndt
  */
 public class PitchInterval implements Comparable<PitchInterval> {
-    private static final HashMap<PitchInterval, String> HARMONIC_INTERVAL = new HashMap<>(){{   // this follows the MEI data.INTERVAL.HARMONIC definition
+    private static final HashMap<PitchInterval, String> HARMONIC_INTERVAL = new HashMap<PitchInterval, String>(){{   // this follows the MEI data.INTERVAL.HARMONIC definition
         put(new PitchInterval(-1, 0), "d1");
         put(new PitchInterval(0, 0), "P1");
         put(new PitchInterval(1, 0), "A1");
@@ -42,7 +42,7 @@ public class PitchInterval implements Comparable<PitchInterval> {
         put(new PitchInterval(12, 7), "P8");
         put(new PitchInterval(13, 7), "A8");
     }};
-    private static final HashMap<String, PitchInterval> HARMONIC_INTERVAL_TO_PITCH_INTERVAL = new HashMap<>(){{   // this follows the MEI data.INTERVAL.HARMONIC definition
+    private static final HashMap<String, PitchInterval> HARMONIC_INTERVAL_TO_PITCH_INTERVAL = new HashMap<String, PitchInterval>(){{   // this follows the MEI data.INTERVAL.HARMONIC definition
         put("d1", new PitchInterval(-1, 0));
         put("P1", new PitchInterval(0, 0));
         put("A1", new PitchInterval(1, 0));
@@ -72,7 +72,7 @@ public class PitchInterval implements Comparable<PitchInterval> {
         put("P8", new PitchInterval(12, 7));
         put("A8", new PitchInterval(13, 7));
     }};
-    private static final HashMap<Integer, String> DIATONIC_INTERVAL_NAMES = new HashMap<>(){{
+    private static final HashMap<Integer, String> DIATONIC_INTERVAL_NAMES = new HashMap<Integer, String>(){{
         put(0, "unison");
         put(1, "second");
         put(2, "third");

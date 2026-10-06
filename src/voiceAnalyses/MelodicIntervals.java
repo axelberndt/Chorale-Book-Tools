@@ -22,14 +22,14 @@ public class MelodicIntervals extends TreeMap<PitchInterval, Integer> {
      * @param msmPart
      */
     public MelodicIntervals(Element msmPart) {
+        super();
+
         if ((msmPart == null) || !msmPart.getLocalName().equals("part"))
             throw new IllegalArgumentException("A VoiceDistance object requires two non-null <part> elements!");
 
         Element s = msmPart.getFirstChildElement("dated").getFirstChildElement("score");
         if ((s == null) || (s.getChildCount() == 0))
             throw new IllegalArgumentException("The MSM part does not contain a non-empty <score>!");
-
-        super();
 
         this.msmScore = Score.createScore(s);
 

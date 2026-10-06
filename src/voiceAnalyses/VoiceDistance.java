@@ -27,6 +27,8 @@ public class VoiceDistance extends TreeMap<Double, PitchInterval> {
      * @param msmPart2
      */
     public VoiceDistance(Element msmPart1, Element msmPart2) {
+        super();
+
         if ((msmPart1 == null) || (msmPart2 == null) || !msmPart1.getLocalName().equals("part") || !msmPart2.getLocalName().equals("part"))
             throw new IllegalArgumentException("A VoiceDistance object requires two non-null <part> elements!");
 
@@ -37,8 +39,6 @@ public class VoiceDistance extends TreeMap<Double, PitchInterval> {
         Element s2 = msmPart2.getFirstChildElement("dated").getFirstChildElement("score");
         if ((s2 == null) || (s2.getChildCount() == 0))
             throw new IllegalArgumentException("Part 2 does not contain a non-empty <score>!");
-
-        super();
 
         this.msmScore1 = Score.createScore(s1);
         this.msmScore2 = Score.createScore(s2);

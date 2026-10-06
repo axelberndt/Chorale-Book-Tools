@@ -20,11 +20,10 @@ import java.util.List;
 
 /**
  * Main class and entry point for program execution.
- * TODO: add homophony/polyphony analysis; which voice plays which chord tone; number of tones in chords
  * @author Axel Berndt
  */
 public class Main {
-    public static final String VERSION = "0.0.1";
+    public static final String VERSION = "0.1.0";
 
     private KeySignatures keySignatures = null;                 // which key signatures are present and for how many measures?
     private MeterSignatures meterSignatures = null;             // which meter signatures are present and for how many measures?
@@ -32,8 +31,6 @@ public class Main {
     private VoiceDistances voiceDistances = null;               // compute the distances between neighboring voices, ie.e soprano-alto, alto-tenor, tenor-bass
     private MelodicIntervalsAnalyses melodicity = null;         // compute melodic intervals for each voice
     private Chords chords = null;                               // perform harmonic analysis
-    private boolean chordSequences = false;                     // compute a Markov model of the chord sequences
-    private boolean nonchordTones = false;                      // get a list and classification of the nonchord tones
 
     private final HashMap<Mei, List<Msm>> meis2Msms = new HashMap<>(); // the MEI files to be analyzed
 
@@ -73,14 +70,6 @@ public class Main {
 
                 case "-chord-analysis":
                     main.chords = new Chords();
-                    break;
-
-                case "chord-sequences":
-                    main.chordSequences = true;
-                    break;
-
-                case "-nonchord-tones":
-                    main.nonchordTones = true;
                     break;
 
                 default:
@@ -245,16 +234,17 @@ public class Main {
      * run an analysis of the chords in each movement
      */
     private void chordAnalysis() {
+        double unaccentuatedChordWeight = 0.5;
         for (Mei mei : this.meis2Msms.keySet()) {
 //            System.out.println("\nProcessing " + mei.getFile().getName());
             Mei meiClone = new Mei(mei.getDocument().copy());
-            this.chords.merge(Chords.analyze(meiClone, this.meis2Msms.get(mei).get(0), 0.5));
+            this.chords.merge(Chords.analyze(meiClone, this.meis2Msms.get(mei).get(0), unaccentuatedChordWeight));
             String outputFilePath = mei.getFile().getParent() + File.separator + "chord-analysis" + File.separator + mei.getFile().getName();
             meiClone.writeMei(outputFilePath);
 //            this.meis2Msms.get(mei).get(0).writeMsm(outputFilePath.replace(".mei", ".msm"));
         }
 
-        System.out.println("\nChord Analysis");
+        System.out.println("\nChord Analysis (unaccentuated chords ar weighted " + unaccentuatedChordWeight + ")");
         System.out.println(this.chords);
     }
 
@@ -426,7 +416,7 @@ public class Main {
             return false;
         }
 
-//        addDummyMeterSig(mei);    // activate this to get proper MEI annotations in MEIs without meterSig; this will affect meter signature analysis!!!
+        addDummyMeterSig(mei);    // activate this to get proper MEI annotations in MEIs without meterSig; this will affect meter signature analysis!!!
         mei.addIds();                                                       // add IDs where they are missing
         mei.resolveCopyofsAndSameas();                                      // this is also done during MEI-to-MSM conversion, execute this line if the MEI data should be altered before further analyses
 //        mei.resolveExpansions();                                            // execute this line if the MEI data should be altered before further analyses

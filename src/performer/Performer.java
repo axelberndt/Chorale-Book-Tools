@@ -1,6 +1,5 @@
-package choralePerformer;
+package performer;
 
-import choralePerformer.Main;
 import meico.mei.Helper;
 import meico.mei.Mei;
 import meico.mpm.Mpm;

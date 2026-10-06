@@ -41,7 +41,7 @@ public class KeySignature {
             new KeyValue<>(PitchName.b, Accidental.s)
     };
 
-    public static final HashMap<Integer, KeyMode> DIATONIC_INTERVAL_TO_MODE = new HashMap<>(){{
+    public static final HashMap<Integer, KeyMode> DIATONIC_INTERVAL_TO_MODE = new HashMap<Integer, KeyMode>(){{
         put(0, KeyMode.major);
         put(1, KeyMode.dorian);
         put(2, KeyMode.phrygian);

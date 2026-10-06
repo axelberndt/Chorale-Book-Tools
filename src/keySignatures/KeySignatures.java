@@ -35,13 +35,13 @@ public class KeySignatures extends HashMap<KeySignature, SortedSet<String>> {
 
         KeySignatures keySignatures = new KeySignatures();
 
-        TreeSet<String> findThis = new TreeSet<>(List.of("scoreDef", "staffDef", "layerDef", "keySig"));    // key signature information can be found only in these elements
-        TreeSet<String> stopHere = new TreeSet<>(List.of("section", "keySig"));                                 // we do not check for key signatures in the musical text, only at the beginning in the initial scoreDef
-        List<Element> candidates = Supplementary.depthFirstSearch(mdivs.getFirst(), findThis, stopHere);    // we check only the first mdiv, others are only verses with variants
+        TreeSet<String> findThis = new TreeSet<>(Arrays.asList("scoreDef", "staffDef", "layerDef", "keySig"));    // key signature information can be found only in these elements
+        TreeSet<String> stopHere = new TreeSet<>(Arrays.asList("section", "keySig"));                                 // we do not check for key signatures in the musical text, only at the beginning in the initial scoreDef
+        List<Element> candidates = Supplementary.depthFirstSearch(mdivs.get(0), findThis, stopHere);    // we check only the first mdiv, others are only verses with variants
         for (Element candidate : candidates) {
             KeySignature keySignature = KeySignature.fromMei(candidate);
             if ((keySignature != null) && !keySignature.isEmpty()) {    // we return the first key signature that has not just null in it
-                keySignatures.put(keySignature, new TreeSet<>(List.of(mei.getFile().getName())));
+                keySignatures.put(keySignature, new TreeSet<>(Collections.singletonList(mei.getFile().getName())));
                 return keySignatures;
             }
         }
@@ -73,14 +73,14 @@ public class KeySignatures extends HashMap<KeySignature, SortedSet<String>> {
 
         if  (keySignatureMap == null) {
             KeySignature keySignature = KeySignature.fromMsm(msm.getRootElement());     // the root element is, of course, no <keySignature> element; this here enforces that also an MPM with no <keySignatureMap> gets processed; this is usually the case, if the <keySignatureMap> is empty (e.g. C major, D dorian etc.).
-            keySignatures.put(keySignature, new TreeSet<>(List.of(msm.getFile().getName())));
+            keySignatures.put(keySignature, new TreeSet<>(Collections.singletonList(msm.getFile().getName())));
             return keySignatures;
         }
 
         for (Element ks :  keySignatureMap.getChildElements()) {
             KeySignature keySignature = KeySignature.fromMsm(ks);
             if ((keySignature != null) && !keySignature.isEmpty()) {
-                keySignatures.put(keySignature, new TreeSet<>(List.of(msm.getFile().getName())));
+                keySignatures.put(keySignature, new TreeSet<>(Collections.singletonList(msm.getFile().getName())));
                 return keySignatures;
             }
         }

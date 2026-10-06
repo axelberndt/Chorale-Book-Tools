@@ -107,9 +107,9 @@ public class MeterSignatures extends HashMap<MeterSignature, Integer> {
         if (mdivs.isEmpty())
             return null;
 
-        TreeSet<String> findThis = new TreeSet<>(List.of("scoreDef", "staffDef", "layerDef", "meterSig"));    // meter signature information can be found only in these elements
-        TreeSet<String> stopHere = new TreeSet<>(List.of("section", "meterSig"));                             // we do not check for meter signatures in the musical text, only at the beginning in the initial scoreDef
-        List<Element> candidates = Supplementary.depthFirstSearch(mdivs.getFirst(), findThis, stopHere);      // we check only the first mdiv, others are only verses with variants
+        TreeSet<String> findThis = new TreeSet<>(Arrays.asList("scoreDef", "staffDef", "layerDef", "meterSig"));    // meter signature information can be found only in these elements
+        TreeSet<String> stopHere = new TreeSet<>(Arrays.asList("section", "meterSig"));                             // we do not check for meter signatures in the musical text, only at the beginning in the initial scoreDef
+        List<Element> candidates = Supplementary.depthFirstSearch(mdivs.get(0), findThis, stopHere);      // we check only the first mdiv, others are only verses with variants
         for (Element candidate : candidates) {
             Attribute resp = candidate.getAttribute("resp");
             if ((resp != null) && resp.getValue().equals("generated dummy")) {   // this was generated during import for better processability and must be ignored here
